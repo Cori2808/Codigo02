@@ -1,0 +1,1986 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Pura Vida QA · Herramientas para la gestión de pruebas</title>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@400;600;800&display=swap" rel="stylesheet">
+<style>
+/* =====================================================================
+   1. VARIABLES Y TEMAS (claro / oscuro / automático)
+   ===================================================================== */
+:root {
+  --bg: #faf7f0;
+  --ink: #16161a;
+  --mut: #6c6c74;
+  --card: #fff;
+  --line: #e7e1d3;
+  --r: #d7263d;
+  --b: #1f4fd8;
+  --g: #17935c;
+  --y: #ffc928;
+  --p: #8e3fbf;
+  --ease: cubic-bezier(.2, .9, .3, 1.1);
+  box-sizing: border-box;
+  padding-top: env(safe-area-inset-top, 0px);
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme=light]) {
+    --bg: #111113;
+    --ink: #f4efe4;
+    --mut: #9b9ba4;
+    --card: #1b1b1f;
+    --line: #2c2c33;
+  }
+}
+:root[data-theme=dark] {
+  --bg: #111113;
+  --ink: #f4efe4;
+  --mut: #9b9ba4;
+  --card: #1b1b1f;
+  --line: #2c2c33;
+}
+
+/* =====================================================================
+   2. BASE
+   ===================================================================== */
+html {
+  scroll-padding-top: env(safe-area-inset-top, 0px);
+  scroll-behavior: smooth;
+}
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  color: var(--ink);
+  font: 16px/1.55 "Bricolage Grotesque", system-ui, -apple-system, sans-serif;
+  background:
+    radial-gradient(circle at 10% 6%, color-mix(in srgb, var(--y) 45%, transparent) 0 130px, transparent 131px),
+    radial-gradient(circle at 94% 40%, color-mix(in srgb, var(--g) 30%, transparent) 0 110px, transparent 111px),
+    radial-gradient(circle at 6% 92%, color-mix(in srgb, var(--r) 25%, transparent) 0 120px, transparent 121px),
+    var(--bg);
+  background-attachment: fixed;
+  overflow-x: hidden;
+}
+main, footer { position: relative; z-index: 1; }
+main {
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 28px 20px 60px;
+}
+h1 {
+  font-size: clamp(2.6rem, 11vw, 4.6rem);
+  line-height: 1;
+  letter-spacing: -.04em;
+  font-weight: 800;
+  margin: .25em 0;
+  text-shadow: 3px 3px 0 var(--y);
+}
+h1.lt {
+  font-size: clamp(1.8rem, 7vw, 2.4rem);
+  text-shadow: 2px 2px 0 var(--y);
+  margin: .3em 0 .5em;
+}
+h1 em {
+  display: inline-block;
+  font-style: normal;
+  color: #fff;
+  background: var(--r);
+  border: 3px solid var(--ink);
+  border-radius: 12px;
+  padding: 0 .18em;
+  transform: rotate(-3deg);
+  text-shadow: none;
+}
+h2 { font-size: 1.45rem; line-height: 1.25; letter-spacing: -.02em; margin: .6em 0; }
+h2.ph { font-size: 1.5rem; margin: .2em 0 .5em; }
+h3 { font-size: 1.05rem; margin: 1em 0 .3em; }
+p { margin: .6em 0; }
+.mut { color: var(--mut); }
+.tag {
+  display: block;
+  font-size: .72rem;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+  color: var(--r);
+  font-weight: 600;
+}
+.card {
+  background: var(--card);
+  border: 3px solid var(--ink);
+  box-shadow: 6px 6px 0 var(--ink);
+  border-radius: 20px;
+  padding: 22px;
+  margin: 18px 0;
+}
+.dato { background: color-mix(in srgb, var(--y) 30%, var(--card)); }
+input {
+  width: 100%;
+  font: inherit;
+  padding: 12px 14px;
+  border-radius: 12px;
+  border: 1px solid var(--line);
+  background: var(--bg);
+  color: var(--ink);
+  margin-top: 8px;
+}
+ol { padding-left: 1.3em; margin: .6em 0 0; }
+
+/* =====================================================================
+   3. BOTONES
+   ===================================================================== */
+button {
+  font: inherit;
+  cursor: pointer;
+  color: var(--ink);
+  background: var(--card);
+  border: 2.5px solid var(--ink);
+  box-shadow: 3px 3px 0 var(--ink);
+  border-radius: 14px;
+  padding: 13px 16px;
+  text-align: left;
+  transition: transform .15s, box-shadow .15s, background .2s, opacity .2s;
+}
+button:hover:not(:disabled) {
+  transform: translate(-2px, -2px);
+  box-shadow: 5px 5px 0 var(--ink);
+}
+button:active:not(:disabled) {
+  transform: translate(2px, 2px);
+  box-shadow: 1px 1px 0 var(--ink);
+}
+button:disabled { cursor: default; color: var(--ink); box-shadow: none; }
+button:focus-visible, .fc:focus-visible {
+  outline: 3px solid var(--b);
+  outline-offset: 3px;
+}
+.go {
+  background: var(--r);
+  color: #fff;
+  font-weight: 600;
+  text-align: center;
+  margin: 6px 8px 0 0;
+}
+.go:disabled { opacity: .35; color: #fff; }
+.back { padding: 6px 12px; font-size: .85rem; }
+.mini {
+  padding: 5px 10px;
+  font-size: .8rem;
+  border-radius: 10px;
+  box-shadow: 2px 2px 0 var(--ink);
+  margin-top: 8px;
+}
+.ib {
+  padding: 6px 10px;
+  font-size: 1.05rem;
+  line-height: 1.2;
+  border-radius: 12px;
+  text-align: center;
+  box-shadow: 2px 2px 0 var(--ink);
+}
+.rowb {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+}
+.big-go {
+  width: 100%;
+  margin: 14px 0 0;
+  padding: 16px;
+  font-size: 1.15rem;
+  animation: pulse 1.6s ease-in-out infinite;
+}
+
+/* =====================================================================
+   4. BARRA SUPERIOR PEGAJOSA, TOASTS Y DECORACIÓN
+   ===================================================================== */
+.top {
+  position: sticky;
+  top: 0;
+  z-index: 6;
+  background: color-mix(in srgb, var(--bg) 82%, transparent);
+  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(8px);
+  border-bottom: 3px solid var(--ink);
+}
+.top > div {
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 8px 20px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.ptsv {
+  margin-left: auto;
+  margin-right: 4px;
+  font-weight: 800;
+  display: inline-block;
+}
+.ptsv.bump { animation: bump .5s var(--ease); }
+.ts {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: calc(18px + env(safe-area-inset-bottom, 0px));
+  z-index: 20;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  pointer-events: none;
+}
+.toast {
+  background: var(--ink);
+  color: var(--bg);
+  font-weight: 600;
+  border-radius: 999px;
+  padding: 10px 18px;
+  border: 3px solid var(--y);
+  animation: toast 3.4s var(--ease) both;
+}
+.flag {
+  height: 30px;
+  border: 0;
+  border-bottom: 3px solid var(--ink);
+  background: linear-gradient(180deg, var(--b) 0 16.6%, #fff 0 33.3%, var(--r) 0 66.6%, #fff 0 83.3%, var(--b) 0);
+}
+.tick {
+  background: #16161a;
+  color: var(--y);
+  overflow: hidden;
+  white-space: nowrap;
+  font-weight: 800;
+  letter-spacing: .1em;
+  padding: 7px 0;
+  border-bottom: 3px solid var(--ink);
+}
+.tick span {
+  display: inline-block;
+  padding-left: 100%;
+  animation: mq 38s linear infinite;
+}
+.fl {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  overflow: hidden;
+}
+.fl i {
+  position: absolute;
+  bottom: -70px;
+  font-style: normal;
+  font-size: 2.2rem;
+  opacity: .3;
+  animation: up 14s linear infinite;
+}
+.orbs {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  overflow: hidden;
+}
+.orb {
+  position: absolute;
+  border-radius: 50%;
+  opacity: .14;
+  translate: calc(var(--mx, 0) * var(--k) * 1px) calc(var(--my, 0) * var(--k) * 1px);
+  transition: translate .5s ease-out;
+}
+.o1 { width: 220px; height: 220px; left: -60px; top: 22%; background: var(--b); --k: -60; }
+.o2 { width: 160px; height: 160px; right: -40px; top: 58%; background: var(--r); --k: 80; }
+.o3 { width: 120px; height: 120px; left: 46%; top: 8%; background: var(--g); --k: 40; }
+footer { text-align: center; padding: 0 20px 40px; font-weight: 600; }
+footer .wheel { margin: 0 auto 10px; width: 48px; height: 48px; }
+
+/* =====================================================================
+   5. TRANSICIONES 3D ENTRE PANTALLAS
+   ===================================================================== */
+#app.out-f { animation: outF .21s ease-in forwards; }
+#app.out-b { animation: outB .21s ease-in forwards; }
+#app.in-f  { animation: inF .6s var(--ease) both; }
+#app.in-b  { animation: inB .6s var(--ease) both; }
+.rs { animation: rise .6s var(--ease) backwards; animation-delay: calc(var(--n, 0) * 60ms); }
+
+/* =====================================================================
+   6. INICIO: CUBO 3D, RUEDA DE CARRETA, ZOO Y DATOS
+   ===================================================================== */
+.hero { display: flex; align-items: center; gap: 16px; }
+.cubewrap { flex: none; width: 64px; height: 64px; perspective: 520px; margin: 0 6px 0 4px; }
+.cube {
+  position: relative;
+  width: 64px;
+  height: 64px;
+  transform-style: preserve-3d;
+  animation: cube 14s linear infinite;
+}
+.cube b {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  font-size: 1.9rem;
+  border: 3px solid var(--ink);
+  border-radius: 8px;
+  background: color-mix(in srgb, var(--c, var(--y)) 55%, var(--card));
+}
+.cube b:nth-child(1) { transform: translateZ(32px); --c: var(--y); }
+.cube b:nth-child(2) { transform: rotateY(90deg) translateZ(32px); --c: var(--g); }
+.cube b:nth-child(3) { transform: rotateY(180deg) translateZ(32px); --c: var(--r); }
+.cube b:nth-child(4) { transform: rotateY(-90deg) translateZ(32px); --c: var(--b); }
+.cube b:nth-child(5) { transform: rotateX(90deg) translateZ(32px); --c: var(--p); }
+.cube b:nth-child(6) { transform: rotateX(-90deg) translateZ(32px); --c: var(--y); }
+.wheel {
+  flex: none;
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  border: 4px solid var(--ink);
+  background: repeating-conic-gradient(var(--r) 0 15deg, var(--y) 0 30deg, var(--b) 0 45deg, #fff 0 60deg);
+  animation: spin 14s linear infinite;
+}
+.zoo { font-size: 2rem; letter-spacing: .25em; margin: 4px 0 8px; }
+.zoo span { display: inline-block; animation: wob 3s ease-in-out infinite; animation-delay: calc(var(--i) * -.4s); }
+#dt { transition: opacity .2s; }
+.autores { margin: 14px 0 8px; }
+.autores .tag { margin-bottom: 8px; }
+.aut { display: flex; flex-wrap: wrap; gap: 10px; }
+.au {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 14px 6px 6px;
+  border: 2.5px solid var(--ink);
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--c) 28%, var(--card));
+  box-shadow: 2px 2px 0 var(--ink);
+  font-weight: 600;
+  font-size: .92rem;
+  line-height: 1.2;
+  animation: pop .5s var(--ease) backwards;
+  animation-delay: calc(var(--i) * 120ms + .4s);
+}
+.au i {
+  flex: none;
+  width: 32px;
+  height: 32px;
+  display: grid;
+  place-items: center;
+  border: 2px solid var(--ink);
+  border-radius: 50%;
+  background: var(--c);
+  color: #fff;
+  font-style: normal;
+  font-weight: 800;
+  font-size: .8rem;
+  letter-spacing: .02em;
+}
+.badges { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 10px; }
+.bd {
+  width: 84px;
+  text-align: center;
+  padding: 8px 4px;
+  border: 2.5px dashed var(--line);
+  border-radius: 14px;
+  opacity: .55;
+  filter: grayscale(1);
+}
+.bd span { display: block; font-size: 1.7rem; line-height: 1.2; }
+.bd small { display: block; font-size: .68rem; line-height: 1.2; }
+.bd.on {
+  opacity: 1;
+  filter: none;
+  border: 2.5px solid var(--ink);
+  background: color-mix(in srgb, var(--y) 35%, var(--card));
+  animation: bdIn .7s var(--ease) backwards;
+}
+
+/* =====================================================================
+   7. MAPA DE NIVELES (botones con inclinación 3D)
+   ===================================================================== */
+.grid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 10px;
+  perspective: 900px;
+  margin: 18px 0;
+}
+.lv {
+  min-height: 78px;
+  padding: 8px 2px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  font-weight: 800;
+  font-size: 1.1rem;
+  background: color-mix(in srgb, var(--c, var(--y)) 38%, var(--card));
+  animation: lvIn .7s var(--ease) backwards;
+  animation-delay: calc(var(--i) * 45ms + .2s);
+}
+.lv:disabled { opacity: .4; cursor: not-allowed; background: var(--card); }
+.lv:nth-child(5n+1) { --c: var(--b); }
+.lv:nth-child(5n+2) { --c: var(--r); }
+.lv:nth-child(5n+3) { --c: var(--y); }
+.lv:nth-child(5n+4) { --c: var(--g); }
+.lv:nth-child(5n)   { --c: var(--p); }
+.lv small { font-size: .7rem; font-weight: 400; color: var(--r); min-height: 1em; }
+.ic { font-size: 1.7rem; line-height: 1.1; }
+.lv .ic { transform: translateZ(22px); }
+.tilt {
+  transform: perspective(700px) rotateX(var(--rx, 0deg)) rotateY(var(--ry, 0deg));
+  transform-style: preserve-3d;
+  transition: transform .15s ease-out, box-shadow .15s;
+}
+.tilt:hover:not(:disabled) {
+  transform: perspective(700px) rotateX(var(--rx, 0deg)) rotateY(var(--ry, 0deg)) translateZ(14px);
+}
+
+/* =====================================================================
+   8. VISOR DE TEORÍA: PÁGINAS QUE SE VOLTEAN EN 3D
+   ===================================================================== */
+.dots { display: flex; flex-wrap: wrap; gap: 8px; margin: 6px 0 10px; }
+.dot {
+  width: 16px;
+  height: 16px;
+  padding: 0;
+  border-radius: 50%;
+  border-width: 2px;
+  box-shadow: none;
+  background: var(--card);
+}
+.dot:hover:not(:disabled) { box-shadow: none; transform: scale(1.2); }
+.dot.seen { background: var(--g); }
+.dot.on { background: var(--r); transform: scale(1.3); }
+.book { perspective: 1400px; margin: 14px 0; scroll-margin-top: 64px; }
+.page {
+  background: var(--card);
+  border: 3px solid var(--ink);
+  box-shadow: 6px 6px 0 var(--ink);
+  border-radius: 20px;
+  padding: 22px;
+  min-height: 300px;
+  backface-visibility: hidden;
+}
+.page.turn-f { animation: turnF .7s var(--ease) both; transform-origin: left center; }
+.page.turn-b { animation: turnB .7s var(--ease) both; transform-origin: right center; }
+.page > * { animation: fadeUp .55s var(--ease) backwards; }
+.page > *:nth-child(2) { animation-delay: .08s; }
+.page > *:nth-child(3) { animation-delay: .16s; }
+.page > *:nth-child(4) { animation-delay: .24s; }
+.page > *:nth-child(5) { animation-delay: .32s; }
+.page > *:nth-child(6) { animation-delay: .40s; }
+.page > *:nth-child(7) { animation-delay: .48s; }
+.page > *:nth-child(8) { animation-delay: .56s; }
+.page > *:nth-child(9) { animation-delay: .64s; }
+.page > *:nth-child(10) { animation-delay: .72s; }
+.pn { display: flex; gap: 10px; margin-top: 14px; }
+.pn .go { flex: 1; margin: 0; }
+.bigw { perspective: 600px; text-align: center; margin: 6px 0; }
+.bigic { display: inline-block; font-size: 4.6rem; line-height: 1; animation: spin3d 6s ease-in-out infinite; }
+.pts-l, ul.pts { list-style: none; padding: 0; margin: 12px 0; }
+ul.pts li {
+  position: relative;
+  padding: 6px 0 6px 30px;
+  animation: slideIn .5s var(--ease) backwards;
+  animation-delay: calc(var(--i, 0) * 90ms + .25s);
+}
+ul.pts li::before { content: "✦"; position: absolute; left: 4px; color: var(--r); font-weight: 800; }
+.tip, .ej {
+  border: 2.5px dashed var(--ink);
+  border-radius: 14px;
+  padding: 12px 14px;
+  margin: 14px 0 4px;
+  font-size: .95rem;
+}
+.tip { background: color-mix(in srgb, var(--y) 30%, var(--card)); }
+.ej { background: color-mix(in srgb, var(--b) 14%, var(--card)); }
+pre.code {
+  background: #16161a;
+  color: var(--y);
+  border-radius: 14px;
+  padding: 14px;
+  overflow-x: auto;
+  font: .85rem/1.5 ui-monospace, Menlo, Consolas, monospace;
+  border: 3px solid var(--ink);
+}
+.flow { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin: 14px 0; }
+.flow .st {
+  padding: 6px 12px;
+  border: 2.5px solid var(--ink);
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--g) 28%, var(--card));
+  font-weight: 600;
+  font-size: .9rem;
+  box-shadow: 2px 2px 0 var(--ink);
+  animation: pop .5s var(--ease) backwards;
+  animation-delay: calc(var(--i) * 140ms + .3s);
+}
+.flow .ar { color: var(--r); font-weight: 800; animation: pop .5s backwards; animation-delay: calc(var(--i) * 140ms + .4s); }
+.tb {
+  overflow-x: auto;
+  margin: 14px 0;
+  border: 3px solid var(--ink);
+  border-radius: 14px;
+  box-shadow: 4px 4px 0 var(--ink);
+  background: var(--card);
+}
+.tb table { border-collapse: collapse; width: 100%; font-size: .88rem; min-width: 420px; }
+.tb th { background: var(--ink); color: var(--bg); text-align: left; padding: 9px 12px; white-space: nowrap; }
+.tb td { padding: 9px 12px; border-top: 1px solid var(--line); vertical-align: top; }
+.tb tbody tr:nth-child(even) { background: color-mix(in srgb, var(--y) 12%, var(--card)); }
+.tb tbody tr { animation: rowIn .5s var(--ease) backwards; animation-delay: calc(var(--i) * 70ms + .25s); }
+
+/* =====================================================================
+   9. TARJETAS GIRATORIAS 3D (glosario y tarjetas clave)
+   ===================================================================== */
+.fgrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 14px;
+  perspective: 1000px;
+  margin: 14px 0;
+}
+.fc {
+  height: 190px;
+  perspective: 900px;
+  cursor: pointer;
+  animation: fcIn .7s var(--ease) backwards;
+  animation-delay: calc(min(var(--i, 0), 12) * 60ms);
+}
+.fi {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  transform-style: preserve-3d;
+  transition: transform .75s cubic-bezier(.2, .8, .2, 1);
+}
+.fc:hover .fi { transform: rotateY(8deg) rotateX(-4deg); }
+.fc.on .fi { transform: rotateY(180deg); }
+.fc.on:hover .fi { transform: rotateY(172deg) rotateX(-4deg); }
+.ff {
+  position: absolute;
+  inset: 0;
+  -webkit-backface-visibility: hidden;
+  backface-visibility: hidden;
+  border: 3px solid var(--ink);
+  border-radius: 16px;
+  box-shadow: 4px 4px 0 var(--ink);
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  overflow: auto;
+}
+.f-front { background: color-mix(in srgb, var(--c, var(--y)) 35%, var(--card)); gap: 4px; }
+.f-front b { font-size: 1rem; line-height: 1.2; }
+.f-front small { color: var(--mut); font-size: .7rem; }
+.f-back { transform: rotateY(180deg); background: var(--card); font-size: .82rem; line-height: 1.4; }
+.f-back p { margin: 0; }
+.chips { display: flex; flex-wrap: wrap; gap: 8px; margin: 12px 0 4px; }
+.chip { padding: 6px 10px; font-size: .85rem; border-radius: 999px; box-shadow: 2px 2px 0 var(--ink); }
+.chip.on { background: var(--y); color: #16161a; }
+
+/* =====================================================================
+   10. ESCENAS (diálogos) Y PREGUNTAS
+   ===================================================================== */
+.ln { display: flex; gap: 10px; margin: 12px 0; align-items: flex-start; }
+.ln.r { flex-direction: row-reverse; }
+.av {
+  font-size: 2rem;
+  width: 52px;
+  height: 52px;
+  flex: none;
+  border-radius: 50%;
+  background: var(--y);
+  border: 2.5px solid var(--ink);
+  display: grid;
+  place-items: center;
+}
+.ln.r .av { background: var(--g); }
+.bu {
+  background: var(--card);
+  border: 2.5px solid var(--ink);
+  box-shadow: 3px 3px 0 var(--ink);
+  border-radius: 14px;
+  padding: 9px 13px;
+  font-size: .95rem;
+}
+.bu b {
+  display: block;
+  font-size: .68rem;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  color: var(--mut);
+}
+.play { border-top: 1px dashed var(--line); margin-top: 18px; padding-top: 14px; }
+.opts { display: grid; gap: 10px; margin: 16px 0; }
+.opts .op {
+  animation: opIn .55s var(--ease) backwards;
+  animation-delay: calc(var(--i, 0) * 70ms + .12s);
+}
+.opts .ok {
+  background: color-mix(in srgb, var(--g) 18%, var(--card));
+  border-color: var(--g);
+  animation: okpop .55s var(--ease);
+}
+.opts .bad {
+  background: color-mix(in srgb, var(--r) 16%, var(--card));
+  border-color: var(--r);
+  animation: shake .5s;
+}
+.opts .gone { opacity: .25; text-decoration: line-through; }
+.bar { display: flex; gap: 6px; margin-bottom: 18px; }
+.bar i { flex: 1; height: 10px; border: 2px solid var(--ink); border-radius: 9px; background: var(--line); transition: background .4s; }
+.bar i.d { background: var(--g); }
+.bar i.x { background: var(--r); }
+.bar i.c { background: var(--ink); }
+.qh { display: flex; justify-content: space-between; align-items: center; }
+.stk { font-weight: 800; color: var(--r); display: inline-block; }
+.stk.bump { animation: bump .5s var(--ease); }
+.q { animation: fadeUp .5s var(--ease) backwards; }
+.fbm { margin: 6px 0; animation: fadeUp .4s var(--ease) backwards; }
+.hot { color: var(--r); font-weight: 800; }
+
+/* =====================================================================
+   11. RESULTADO: ANILLO ANIMADO, ESTRELLAS Y REPASO
+   ===================================================================== */
+.ringw { position: relative; width: 170px; height: 170px; margin: 10px auto; }
+.ring { width: 170px; height: 170px; transform: rotate(-90deg); }
+.rb { fill: none; stroke: var(--line); stroke-width: 12; }
+.rf {
+  fill: none;
+  stroke-width: 12;
+  stroke-linecap: round;
+  transition: stroke-dashoffset 1.3s cubic-bezier(.2, .8, .2, 1);
+}
+.rf.p { stroke: var(--g); }
+.rf.f { stroke: var(--r); }
+.rn {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  font-size: 2.6rem;
+  font-weight: 800;
+  letter-spacing: -.04em;
+}
+.stars { text-align: center; font-size: 2.2rem; perspective: 500px; margin: 4px 0 10px; }
+.stars span { display: inline-block; animation: starIn .8s var(--ease) backwards; animation-delay: calc(var(--i) * 250ms + .6s); }
+.stars .off { opacity: .3; }
+.rv { padding: 10px 0; border-top: 1px dashed var(--line); font-size: .92rem; }
+.rv:first-of-type { border-top: 0; }
+.center { text-align: center; }
+
+/* =====================================================================
+   12. CONFETI
+   ===================================================================== */
+.cf {
+  position: fixed;
+  top: -40px;
+  font-style: normal;
+  font-size: 1.7rem;
+  z-index: 9;
+  pointer-events: none;
+  animation: fall 2s ease-in forwards;
+}
+
+/* =====================================================================
+   13. ANIMACIONES (keyframes)
+   ===================================================================== */
+@keyframes mq { to { transform: translateX(-100%); } }
+@keyframes up { to { transform: translateY(-115vh) rotate(30deg); } }
+@keyframes spin { to { transform: rotate(360deg); } }
+@keyframes wob { 50% { transform: translateY(-7px); } }
+@keyframes cube {
+  from { transform: rotateX(-24deg) rotateY(0deg); }
+  to   { transform: rotateX(-24deg) rotateY(360deg); }
+}
+@keyframes spin3d {
+  0%, 100% { transform: rotateY(-28deg) translateY(0); }
+  50%      { transform: rotateY(28deg) translateY(-8px); }
+}
+@keyframes outF { to { opacity: 0; transform: perspective(1200px) rotateY(-14deg) translateZ(-140px) translateX(-30px); } }
+@keyframes outB { to { opacity: 0; transform: perspective(1200px) rotateY(14deg) translateZ(-140px) translateX(30px); } }
+@keyframes inF  { from { opacity: 0; transform: perspective(1200px) rotateY(14deg) translateZ(-140px) translateX(30px); } }
+@keyframes inB  { from { opacity: 0; transform: perspective(1200px) rotateY(-14deg) translateZ(-140px) translateX(-30px); } }
+@keyframes rise   { from { opacity: 0; transform: translateY(26px) rotateX(-18deg); } }
+@keyframes fadeUp { from { opacity: 0; transform: translateY(14px); } }
+@keyframes slideIn { from { opacity: 0; transform: translateX(-22px); } }
+@keyframes rowIn  { from { opacity: 0; transform: translateX(26px); } }
+@keyframes pop    { from { opacity: 0; transform: scale(.4) rotate(-8deg); } }
+@keyframes lvIn   { from { opacity: 0; transform: perspective(500px) rotateX(-85deg) scale(.8); } }
+@keyframes opIn   { from { opacity: 0; transform: perspective(600px) rotateX(-70deg) translateY(12px); } }
+@keyframes fcIn   { from { opacity: 0; transform: rotateY(-90deg) scale(.8); } }
+@keyframes bdIn   { from { opacity: 0; transform: rotateY(180deg) scale(.5); } }
+@keyframes turnF  { from { opacity: 0; transform: rotateY(-65deg) translateX(30px); } to { opacity: 1; transform: none; } }
+@keyframes turnB  { from { opacity: 0; transform: rotateY(65deg) translateX(-30px); } to { opacity: 1; transform: none; } }
+@keyframes starIn { from { opacity: 0; transform: rotateY(540deg) scale(.2); } }
+@keyframes okpop  { 0% { transform: scale(1); } 40% { transform: scale(1.06) rotate(-1deg); } 100% { transform: scale(1); } }
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  20% { transform: translateX(-9px); }
+  40% { transform: translateX(8px); }
+  60% { transform: translateX(-6px); }
+  80% { transform: translateX(4px); }
+}
+@keyframes bump  { 40% { transform: scale(1.4); } }
+@keyframes pulse { 50% { transform: scale(1.03); } }
+@keyframes toast {
+  0%   { opacity: 0; transform: translateY(30px) scale(.8); }
+  10%  { opacity: 1; transform: none; }
+  88%  { opacity: 1; transform: none; }
+  100% { opacity: 0; transform: translateY(20px); }
+}
+@keyframes fall { to { transform: translate(var(--dx, 0px), 112vh) rotate(var(--rot, 360deg)); } }
+
+/* =====================================================================
+   14. RESPONSIVE Y MOVIMIENTO REDUCIDO
+   ===================================================================== */
+@media (max-width: 420px) {
+  .fgrid { grid-template-columns: repeat(2, 1fr); gap: 10px; }
+  .fc { height: 210px; }
+  .page { padding: 18px; }
+  .bd { width: 76px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: .01ms !important;
+    animation-iteration-count: 1 !important;
+    animation-delay: 0s !important;
+    transition-duration: .01ms !important;
+    scroll-behavior: auto !important;
+  }
+  .tick span { padding-left: 0; }
+}
+</style>
+</head>
+<body>
+<div class="orbs" aria-hidden="true"><div class="orb o1"></div><div class="orb o2"></div><div class="orb o3"></div></div>
+<div class="fl" aria-hidden="true"></div>
+<div class="flag"></div>
+<div class="tick"><span>🇨🇷 ¡PURA VIDA! ✦ ¡TUANIS! ✦ ¡DIAY, MAE! ✦ ¡UPE! ✦ 🦥 SIN PRISA, PERO CON PRUEBAS ✦ ☕ CAFECITO ✦ 🌋 ¡QUÉ NIVEL! ✦ 🐸 ¡A CAZAR BICHOS! ✦ 🔗 TRAZABILIDAD ✦ 🌺 ¡CON TODA! ✦ 🧪 CERO BICHOS, CERO ESTRÉS ✦ 🇨🇷</span></div>
+<nav class="top" aria-label="Navegación principal"><div>
+  <button class="ib" id="bHome" title="Mapa de niveles" aria-label="Mapa de niveles">🏠</button>
+  <button class="ib" id="bGl" title="Glosario" aria-label="Glosario">📚</button>
+  <span class="ptsv" id="pts">⭐ 0</span>
+  <button class="ib" id="bTh" title="Cambiar tema claro u oscuro" aria-label="Cambiar tema">🌗</button>
+  <button class="ib" id="bSn" title="Sonido" aria-label="Sonido" aria-pressed="false">🔇</button>
+</div></nav>
+<main id="app"></main>
+<div id="ts" class="ts" aria-live="polite"></div>
+<footer><div class="wheel" title="Rueda de carreta típica"></div>Hecho con ☕, 🌺 y mucha pura vida 🇨🇷 · ¡Ticos QA al poder!</footer>
+<script>
+/* =====================================================================
+   1. DATOS DEL JUEGO: constantes, reacciones, preguntas y escenas
+   ===================================================================== */
+const PASS = 5;
+const ICO = ['🦥', '☕', '🌋', '🐸', '🦜', '🌺', '🦋', '🌴', '🏖️', '🏆'];
+const DATOS = [
+  'Costa Rica abolió su ejército en 1948. Moraleja QA: invertir en prevención rinde más que apagar incendios.',
+  'La guaria morada es la flor nacional. Un buen caso de prueba también florece: precondiciones, pasos y resultado esperado.',
+  'El yigüirro es el ave nacional y su canto anuncia las lluvias. Un buen QA también avisa antes de que caiga el aguacero.',
+  'El café tico se cosecha a mano, grano por grano. Las pruebas igual: una por una y con cuidado.',
+  'Las carretas típicas son Patrimonio Cultural Inmaterial de la Humanidad (UNESCO). Cada rueda pintada es única, como cada suite bien armada.',
+  'Costa Rica es súper biodiversa… y también tiene bichos. Los de software se cazan con casos de prueba.',
+  'El gallo pinto lleva arroz y frijoles en su justa medida. Una buena suite también: ni de más ni de menos.',
+  '“Pura vida” sirve para saludar, agradecer y despedirse. Un buen reporte de defecto también es corto, claro y sirve para todo el equipo.',
+  'Costa Rica produce casi toda su electricidad con fuentes renovables. Una suite sana también se alimenta de fuentes limpias: casos vigentes, no obsoletos.',
+  'Las tortugas marinas anidan en nuestras playas y cada nido se monitorea. Eso es trazabilidad en la vida real.'
+];
+const YES = ['¡Tuanis, mae!', '¡Pura vida! Esa fue con toda.', '¡Upe! Correctísimo.', 'Más tico que el gallo pinto. ¡Bien!', '¡Qué nivel, jefe!', '¡Buena nota!', '¡Con toda, mae!'];
+const NO = ['Diay, mae… casi casi.', '¡Qué torta! Pero así se aprende.', 'Esa respuesta se fue de vacaciones a Tamarindo.', 'Aguántese, que ya viene la próxima.', 'Mala nota… pero la próxima sale.', 'Ni modo, mae. La práctica hace al maestro.'];
+
+/* Cada pregunta: enunciado|correcta|mala|mala|mala  (las opciones se barajan al jugar) */
+const LV = [
+['Pura vida, QA','Gestión de pruebas es planear, organizar, ejecutar y reportar las pruebas para saber si el software sirve antes de que llegue al usuario. Sin orden es como una mejenga sin cancha: todos corren y nadie sabe quién va ganando.',`¿Qué es un caso de prueba?|Pasos, datos y resultado esperado para verificar algo|Un error en producción|Un contrato con el cliente|Un script de despliegue
+¿Qué es un defecto (bug)?|Diferencia entre lo esperado y lo real|Una función nueva|Un tipo de servidor|Una herramienta de pruebas
+¿Para qué sirve una herramienta de gestión de pruebas?|Organizar y dar seguimiento a las pruebas en un solo lugar|Programar la aplicación|Diseñar la interfaz|Cobrar licencias
+Si el resultado real coincide con el esperado, el caso queda…|Pasado (Passed)|Bloqueado|Fallido|Reabierto
+¿Qué significa QA?|Quality Assurance|Quick Answer|Query Application|Quality Alert
+Un mae anota las pruebas en una servilleta de la soda. ¿Riesgo principal?|Se pierde trazabilidad y evidencia|Ninguno, es ágil|Se enfría el café|Gasta servidor
+Según los principios de las pruebas, probar puede mostrar que…|Hay defectos, pero no que no los haya|El software es perfecto|El software es seguro al 100%|No hay que probar más`],
+['El gallo pinto de las pruebas','Plan de pruebas (alcance, estrategia, recursos), casos, suites (agrupaciones), ciclos o runs (ejecuciones por versión) y resultados. Son como el gallo pinto: arroz, frijoles y su toque; cada pieza cumple y todas se mezclan.',`Un conjunto de casos agrupados por funcionalidad es una…|Suite de pruebas|Rama de Git|Historia de usuario|Licencia
+El documento con alcance, estrategia, recursos y cronograma es el…|Plan de pruebas|Manual de usuario|Log del servidor|Diagrama de red
+Un ciclo de ejecución (test run) es…|Correr casos contra una versión concreta|Escribir requisitos|Un tipo de bug|Un reporte financiero
+Un buen caso incluye siempre…|Precondiciones, pasos y resultado esperado|Solo el nombre|El código fuente|La hora del almuerzo
+Si un caso no se puede ejecutar por un impedimento externo, queda…|Bloqueado|Pasado|Cerrado|Duplicado
+Los criterios de entrada y salida definen…|Cuándo empezar y cuándo terminar una fase de pruebas|El horario del equipo|El precio de la herramienta|Los colores del tablero
+Probar tras un cambio para ver que no se rompió lo anterior es…|Regresión|Exploración|Usabilidad|Aceptación`],
+['Del Excel al Quality Center','Antes, las pruebas vivían en Excel y Word. Mercury Interactive creó TestDirector, que se rebautizó Quality Center y luego ALM, pasando por HP, Micro Focus y OpenText. Surgieron opciones abiertas como TestLink, y hoy mandan las herramientas web integradas con Jira y CI/CD. Del Excel a la nube: ¡qué viaje, mae!',`Antes de las herramientas especializadas, muchos equipos usaban…|Hojas de cálculo y documentos|Blockchain|Hologramas|IA generativa
+¿Qué empresa creó TestDirector?|Mercury Interactive|Atlassian|Gurock|Google
+TestDirector evolucionó hasta llamarse…|Quality Center / ALM|TestRail|Zephyr|Cucumber
+TestLink es una herramienta…|Open source de gestión de pruebas|De diseño gráfico|De monitoreo de red|Exclusiva para móviles
+La tendencia actual en gestión de pruebas es…|Herramientas web integradas con Jira y CI/CD|Volver al papel|Probar solo en producción|Eliminar las pruebas
+El estándar IEEE 829 trataba sobre…|Documentación de pruebas de software|Cableado de red|Contabilidad|Seguridad física
+IEEE 829 fue sustituido por…|ISO/IEC/IEEE 29119|ISO 8601|ISO 27001|PMBOK`],
+['El menú de la soda','TestRail (de Gurock) destaca por su sencillez. Zephyr (SmartBear) y Xray viven dentro de Jira. qTest (Tricentis) apunta a empresas grandes. Azure Test Plans va con Azure DevOps y TestLink es gratis. Escoger herramienta es como escoger soda: depende del hambre y del bolsillo.',`¿Cuáles funcionan como apps dentro de Jira?|Zephyr y Xray|TestLink y Excel|Figma y Canva|Docker y Kubernetes
+TestRail nació en…|Gurock Software|Mercury|Oracle|Microsoft
+Azure Test Plans forma parte de…|Azure DevOps|Google Workspace|AWS Lambda|Salesforce
+¿Cuál es open source?|TestLink|qTest|TestRail|Quality Center
+qTest pertenece a…|Tricentis|Microsoft|Oracle|Slack
+Zephyr pertenece a…|SmartBear|Tricentis|Gurock|Mercury
+Lo primero al elegir herramienta es analizar…|Necesidades, integraciones y presupuesto|El color del logo|Cuál usa el vecino|Cuál tiene más emojis`],
+['Trazabilidad: el chisme del barrio','Trazabilidad es enlazar requisito ↔ caso ↔ ejecución ↔ defecto. La matriz de trazabilidad (RTM) muestra la cobertura: qué requisitos tienen pruebas y cuáles andan sueltos. Como el chisme del barrio: todo se conecta con alguien.',`La matriz de trazabilidad relaciona…|Requisitos con casos de prueba|Usuarios con claves|Servidores con IP|Sprints con vacaciones
+Un requisito sin casos asociados indica…|Un hueco de cobertura|Calidad perfecta|Un bug resuelto|Un error de red
+Cuando cambia un requisito, la trazabilidad permite…|Saber qué casos actualizar (análisis de impacto)|Esconder el cambio|Borrar el requisito|Cambiar de herramienta
+Cobertura de requisitos =|Requisitos con pruebas / total de requisitos|Bugs / casos|Testers / devs|Casos / semanas
+En Jira, enlazar un Test a una Historia sirve para…|Medir la cobertura de esa historia|Cambiar colores|Bajar la latencia|Facturar
+Trazabilidad hacia atrás va…|Del caso al requisito|Del requisito al caso|Del bug al hosting|Del servidor al cliente
+¿Qué NO es parte de la cadena de trazabilidad?|La marca de la laptop del tester|El requisito|La ejecución|El defecto`],
+['Cazando bichos','Al ejecutar se marca el resultado, se adjunta evidencia y se enlaza el defecto. Severidad es el impacto técnico; prioridad es la urgencia de atenderlo. Ciclo típico: Nuevo → Asignado → Resuelto → Verificado → Cerrado (o Reabierto, si el bicho vuelve).',`La severidad mide…|El impacto del defecto en el sistema|Qué tan pronto lo quiere el negocio|La edad del bug|El nombre del dev
+La prioridad mide…|Qué tan pronto debe corregirse|Las líneas del bug|El navegador usado|El costo de la herramienta
+Un error de ortografía en el logo de la portada suele ser…|Baja severidad, alta prioridad|Alta severidad, baja prioridad|Ambas bajas|Imposible clasificar
+Tras la corrección de un defecto, QA debe…|Reejecutar y verificar (retest)|Borrar el caso|Subir la severidad|Cerrarlo sin mirar
+Un defecto que reaparece tras cerrarse pasa a…|Reabierto|Rechazado|Diferido|Duplicado
+¿Qué ayuda más a reproducir un bug?|Pasos, datos, entorno y evidencia|“Diay, no sirve, mae”|Solo el título|Un emoji triste
+Un defecto reportado dos veces se marca como…|Duplicado|Rechazado|Resuelto|Diferido`],
+['Métricas: cuentas claras','Métricas típicas: % de ejecución, pass rate, densidad de defectos, defectos por severidad y defect leakage (los que se escapan a producción). Ojo: medir sin contexto engaña. Un 100% de pass rate con tres casos es puro humo.',`Pass rate =|Casos pasados / casos ejecutados × 100|Bugs / líneas de código|Casos / testers|Ejecutados / semanas
+El defect leakage mide…|Defectos que se escapan a producción|Bugs arreglados rápido|Fugas de agua|Defectos duplicados
+Densidad de defectos =|Defectos / tamaño del software (KLOC)|Casos / horas|Testers / bugs|Defectos / clientes
+Un pass rate de 100% con 3 casos ejecutados…|Dice poco: falta cobertura|Garantiza calidad|Es lo ideal|Elimina los bugs
+El % de ejecución indica…|Cuánto del plan ya se corrió|Cuántos bugs hay|El costo del sprint|La velocidad del internet
+Un burn-down de pruebas muestra…|Casos pendientes a lo largo del tiempo|Salarios por mes|Uso de CPU|Clics por página
+¿Qué métrica evalúa la eficacia de las pruebas antes de producción?|DDE (Defect Detection Effectiveness)|Número de reuniones|Horas de café|Cantidad de monitores`],
+['Que trabaje la máquina','Las herramientas de gestión se conectan a pipelines (Jenkins, GitHub Actions, GitLab CI) por API REST. Frameworks como Playwright, Selenium o pytest ejecutan; los resultados suben, a menudo en JUnit XML, a TestRail, Xray o qTest. Así el reporte se arma solo, y usted se toma el cafecito.',`JUnit XML es…|Un formato común de resultados de pruebas|Un lenguaje de programación|Un navegador|Una base de datos
+¿Cuál es un framework de automatización web?|Playwright|TestRail|Jira|Confluence
+Para enviar resultados automáticos a la herramienta de gestión se usa…|Su API REST|Correo con capturas|WhatsApp|Papel
+Un pipeline que corre pruebas en cada commit permite…|Detectar regresiones temprano|Eliminar a los testers|Evitar Git|Escribir requisitos
+Allure Report sirve para…|Generar reportes visuales de pruebas|Compilar Java|Alojar sitios|Pagar nóminas
+¿Qué conviene NO automatizar primero?|Exploratorias y de usabilidad|Humo estables|Regresión repetitiva|Verificaciones de API
+Un test flaky es el que…|Pasa y falla sin cambios en el código|Siempre falla|Nunca se ejecuta|Es lento a propósito`],
+['Pensar antes del chapuzón','Estrategia: pruebas basadas en riesgo (probabilidad × impacto), pirámide de pruebas (muchas unitarias, algunas de integración, pocas E2E) y shift-left (probar temprano). TMMi mide madurez y ISO/IEC/IEEE 29119 ordena el proceso. Migrar de herramienta exige mapear campos, historial y adjuntos.',`En pruebas basadas en riesgo, el riesgo es…|Probabilidad × impacto|Costo + tiempo|Testers × bugs|Sprints / casos
+La pirámide de pruebas recomienda…|Muchas unitarias y pocas E2E|Solo E2E|Solo manuales|Pirámide invertida siempre
+Shift-left significa…|Probar lo más temprano posible|Mover botones a la izquierda|Probar solo al final|Subcontratar pruebas
+TMMi es…|Un modelo de madurez de pruebas|Un framework de UI|Un lenguaje de consultas|Una nube pública
+Antes de migrar de TestRail a Xray, lo sensato es…|Mapear campos y adjuntos y hacer un piloto|Borrar todo y empezar|Migrar el viernes sin respaldo|Esperar que se arregle solo
+Con poco tiempo y mucho alcance se prioriza…|Lo de mayor riesgo para el negocio|Lo más fácil de probar|Lo que gusta al jefe|Lo más reciente
+Una suite de regresión “inflada” se nota por…|Casos obsoletos o duplicados que cuestan tiempo|Pocos casos|Correr en minutos|Buena cobertura de riesgo`],
+['Jefe de QA, ¡con toda!','Nivel jefe: aquí no hay una sola respuesta, hay criterio. Se decide con riesgo, evidencia y trazabilidad, se evita duplicar casos (pasos compartidos), se mantiene una única fuente de verdad y cada métrica se lee junto a las demás. Mae, aquí se gradúa quien piensa.',`Tenés 400 casos y 1 día. Lo mejor es…|Ejecutar por riesgo y reportar cobertura real|Ejecutar al azar y reportar 100%|Marcar todo como pasado|No entregar nada
+En Xray, un caso escrito en Gherkin (Given/When/Then) es de tipo…|Cucumber (BDD)|Manual|Plantilla de Word|Diagrama
+Un auditor pide evidencia de que un requisito se probó en la v2.3. Mostrás…|Requisito → casos → ejecución v2.3 → resultados y defectos|Un correo diciendo “ya probamos”|Una captura de chat|Nada, basta con la confianza
+Si sube el pass rate pero también el leakage, probablemente…|Las pruebas no cubren lo que importa|Todo va de maravilla|Hay pocos usuarios|Faltan devs
+Usar una sola herramienta para todo sin evaluarla arriesga…|Procesos ajenos y trabajo manual extra|Que sea barata|Que tenga muchos botones|Nada
+Para no editar 30 casos cuando cambia un paso común, se usan…|Pasos compartidos (shared steps)|Copiar y pegar 30 veces|Borrar casos|Papel
+“Fuente única de verdad” en gestión de pruebas implica…|El estado oficial vive en una sola herramienta|Un solo tester|Un solo caso|Solo usar Excel`]
+];
+
+/* Escenas: [titulo, dialogo (Letra:texto), [pregunta, opcion buena, reaccion, opcion mala, reaccion]] */
+const CH = {
+  Y: ['👩‍💻', 'Yeri · QA'],
+  M: ['🧑‍💻', 'Maelo · dev'],
+  B: ['🧔', 'Don Beto · jefe'],
+  C: ['👵', 'Doña Chepa · soda'],
+  L: ['👩‍🦳', 'Tía Lela · chisme'],
+  P: ['🚕', 'Pachi · taxista']
+};
+const SC = [
+['La servilleta perdida',`C:¡Mae, se me perdió la servilleta con los pedidos de las 12!
+Y:Por eso existe la gestión de pruebas, Doña Chepa: todo anotado, con pasos y resultado esperado.
+C:¿Y eso cómo funciona, mija?
+Y:Pedido: casado con pollo. Esa es la prueba. Si llega con carne, no coincide con lo esperado: el caso falla y se reporta el defecto.`,['Llega un casado con carne en vez de pollo. ¿Cómo queda el caso?','Fallido, y se reporta el defecto','C:¡Eso! Y yo le tiro la queja a la cocina.','Pasado, total es comida','C:Diay, así se me va la clientela, mae.']],
+['Desayuno con plan',`Y:Doña Chepa, hagamos el plan de pruebas del desayuno: alcance, recursos y horario.
+C:Alcance: gallo pinto, huevo y café. ¡Sin chinamos!
+Y:Eso es una suite: Desayuno típico. Cada plato es un caso, y el sábado a las 7 a. m. es el ciclo de ejecución.
+M:¿Y si hay un problema con el café?`,['Se acabó el agua y no se puede ejecutar el caso “Servir café”. ¿Qué estado le ponés?','Bloqueado','Y:Exacto: no falló, algo externo lo frena.','Fallido','Y:Ojo: fallido es cuando sí se ejecutó y no coincidió.']],
+['Del Excel al Quality Center',`B:Yo llevo las pruebas en Excel desde Italia 90, mae.
+Y:Antes todos hacíamos eso, Don Beto. Luego Mercury creó TestDirector, que pasó a Quality Center, ALM y más.
+B:¿Y para qué tanto cambio?
+Y:Para tener historial, evidencia y trazabilidad en un solo lugar, no en 14 archivos “final_v3_ahora_sí”.`,['¿Qué ventaja real da una herramienta sobre el Excel suelto?','Historial, evidencia y trazabilidad centralizados','B:Diay… eso sí vale la pena.','Ninguna, el Excel es eterno','Y:Hasta que se pierda el archivo, Don Beto.']],
+['¿Taxi, Uber o bus?',`P:Mae, ¿cuál herramienta de pruebas me recomienda? Yo soy taxista, no tester.
+Y:Depende de la ruta, Pachi. TestRail es simple y directa; Xray y Zephyr viven dentro de Jira; TestLink es gratis y abierta.
+P:O sea, como escoger entre taxi, Uber o bus.
+Y:Casi. Se escoge por necesidades, integraciones y presupuesto, no por moda.`,['Tu equipo ya vive en Jira y quiere todo ahí. ¿Cuál mirás primero?','Xray o Zephyr','P:¡Tuanis! Misma casa, cero vueltas.','TestLink, porque es gratis','Y:Puede servir, pero primero conviene ver las que viven dentro de Jira.']],
+['El chisme del barrio',`L:Dicen que Doña Mayra le contó a Doña Rosa que el requisito cambió…
+Y:¡Así funciona la trazabilidad, Tía Lela! Requisito ↔ caso ↔ ejecución ↔ defecto: todo conectado.
+L:¿Y si falta un eslabón?
+Y:Entonces hay un hueco de cobertura: un requisito sin pruebas.`,['Cambió el requisito “pagar con tarjeta”. ¿Qué hacés?','Ver qué casos están enlazados y actualizarlos','L:¡Eso! Análisis de impacto, como seguir el chisme.','Esperar a que alguien se queje','Y:Eso es probar en producción… y sin permiso.']],
+['Cazando bichos',`M:En mi máquina sí funciona, mae.
+Y:Eso no es un reporte, Maelo. Dame pasos, datos, entorno y evidencia.
+M:¿Y qué tan grave es?
+Y:Severidad es el impacto técnico; prioridad es qué tan rápido hay que arreglarlo.`,['Día de lanzamiento: error de ortografía en el logo de la portada. ¿Cómo lo clasificás?','Baja severidad, alta prioridad','Y:Exacto: no rompe nada, pero se ve horrible.','Alta severidad, baja prioridad','M:Diay, no tumba el sistema, mae.']],
+['Todo en verde (casi)',`B:¡Todo en verde! ¡Pass rate de 100%! ¡Lancemos!
+Y:¿De cuántos casos, Don Beto?
+B:De… tres.
+Y:Hay 200 en el plan. Una métrica sin contexto engaña: mirá también ejecución, cobertura y defect leakage.`,['Pass rate de 100%, pero solo se ejecutaron 3 de 200 casos. ¿Qué dice?','Casi nada: falta ejecución y cobertura','B:Mmm… ya me bajó la emoción.','Que ya se puede lanzar','Y:Ni de chiste, Don Beto.']],
+['El bus a Heredia',`M:Mi test pasa, falla, pasa, falla… y no toqué el código.
+P:Igualito al bus a Heredia: a veces llega, a veces no.
+Y:Eso es un test flaky. En un pipeline de CI/CD no se puede confiar en un test caprichoso.
+Y:Los resultados suben por API a la herramienta de gestión, así el reporte se arma solo.`,['Un test pasa y falla sin cambios en el código. ¿Qué hacés?','Investigarlo y estabilizarlo o aislarlo','M:Tiene sentido, mae.','Correrlo otra vez hasta que pase','Y:Eso esconde el problema, Maelo.']],
+['Antes del chapuzón',`B:Tenemos una semana y 500 casos. ¿Los corremos todos?
+Y:Pruebas basadas en riesgo: probabilidad por impacto. Primero lo que más duele si falla.
+P:Como mirar si la piscina tiene agua antes de tirarse.
+Y:Y shift-left: probar temprano, no el día antes del lanzamiento.`,['Hay poco tiempo. ¿Qué probás primero?','El pago y el login, de mayor riesgo','B:Claro, ahí está la plata.','La pantalla “Acerca de”','Y:Linda, pero el negocio no se cae si falla.']],
+['La junta en la soda',`C:Ya me sé el cuento: requisito, caso, ejecución, defecto.
+Y:Y una sola fuente de verdad: el estado oficial vive en una herramienta, no en 14 chats.
+M:Cambió un paso que usan 30 casos… ¿lo edito 30 veces?
+Y:¡No! Para eso están los pasos compartidos (shared steps).`,['Un paso común aparece en 30 casos y cambió. ¿Qué es lo mejor?','Editar el paso compartido una vez','C:¡Pura vida! Cambio uno, cambian todos.','Copiar y pegar en los 30','Y:Eso es deuda de mantenimiento, Maelo.']]
+];
+
+/* Insignias: [emoji, nombre, cómo se gana, condición] */
+const BADGES = [
+  ['📖', 'Ratón de biblioteca', 'Llegá al final de la teoría de un nivel', s => Object.keys(s.read).length > 0],
+  ['🧭', 'Explorador', 'Abrí el glosario', s => !!s.flags.gloss],
+  ['🔥', 'Racha de 5', 'Acertá 5 preguntas seguidas', s => s.bestStreak >= 5],
+  ['💯', 'Sin bichos', 'Sacá 7/7 en un nivel', s => Object.values(s.best).some(n => n >= 7)],
+  ['🏆', 'Jefe de QA', 'Superá el nivel 10', s => (s.best[10] || 0) >= PASS]
+];
+
+/* =====================================================================
+   2. TEORÍA AMPLIADA: 3 lecciones por nivel (antes de las tarjetas y la escena)
+   Campos de cada lección:
+     ic (emoji), t (título), p (párrafos), flow (pasos con flechas),
+     tbl {h, r} (tabla), pts (viñetas), code (bloque), ej (ejemplo), tip (truco)
+   Se admite **negrita** en los textos.
+   ===================================================================== */
+const TH = [
+/* ---------------- Nivel 1 · Pura vida, QA ---------------- */
+[
+  {
+    ic: '🎯', t: '¿Por qué probamos?',
+    p: [
+      'Probar no es buscar culpables: es **dar información** sobre la calidad para que el equipo decida con datos y no con corazonadas.',
+      'Cuanto más tarde aparece un defecto, más caro sale arreglarlo. Corregirlo en producción cuesta mucho más que corregirlo cuando todavía era una idea en el papel.'
+    ],
+    flow: ['Error humano', 'Defecto en el código', 'Fallo al ejecutar'],
+    pts: [
+      '**Error**: equivocación de una persona (por ejemplo, entender mal un requisito).',
+      '**Defecto o bug**: el error ya plasmado en el código o en un documento.',
+      '**Fallo**: el defecto se manifiesta cuando el sistema corre.'
+    ],
+    tip: 'Cortá la cadena error → defecto → fallo lo más temprano posible: ahí está el ahorro.'
+  },
+  {
+    ic: '🧭', t: 'QA, QC y pruebas: no son lo mismo',
+    p: [
+      'Mucha gente usa **QA** como sinónimo de “el que prueba”, pero el término abarca más. QA se enfoca en **prevenir** (procesos), QC en **detectar** (producto) y las pruebas son una de las actividades de control.'
+    ],
+    tbl: {
+      h: ['Concepto', 'Pregunta que responde', 'Ejemplo'],
+      r: [
+        ['**QA**', '¿Seguimos buenos procesos?', 'Revisiones, estándares, retrospectivas'],
+        ['**QC**', '¿El producto cumple?', 'Ejecutar pruebas, inspecciones'],
+        ['**Verificación**', '¿Lo construimos bien?', 'Revisar el diseño o código contra la especificación'],
+        ['**Validación**', '¿Construimos lo correcto?', 'Demo con la persona usuaria real']
+      ]
+    },
+    tip: 'Verificación = “bien hecho”; validación = “bien pensado”.'
+  },
+  {
+    ic: '📜', t: 'Los 7 principios de las pruebas',
+    p: ['Son ideas que se repiten en casi todos los cursos y certificaciones. Vale la pena tenerlas frescas:'],
+    pts: [
+      '**1. La prueba muestra defectos**, no su ausencia.',
+      '**2. La prueba exhaustiva es imposible**: se prioriza según el riesgo.',
+      '**3. Probar temprano** ahorra tiempo y dinero.',
+      '**4. Los defectos se agrupan**: pocos módulos concentran la mayoría.',
+      '**5. Paradoja del pesticida**: repetir siempre los mismos casos deja de encontrar bugs nuevos; hay que renovarlos.',
+      '**6. Depende del contexto**: no se prueba igual un banco que un juego.',
+      '**7. Falacia de la ausencia de errores**: un sistema sin bugs que no sirve a quien lo usa igual fracasa.'
+    ],
+    tip: 'Si una pregunta dice “garantiza que no hay defectos”, desconfiá: ya conocés el principio 1.'
+  }
+],
+/* ---------------- Nivel 2 · El gallo pinto de las pruebas ---------------- */
+[
+  {
+    ic: '🧱', t: 'Las piezas del proceso',
+    p: ['Un proceso de pruebas ordenado se parece a cocinar para una fiesta: primero se planea el menú, luego se prepara, se sirve y al final se revisa qué sobró.'],
+    flow: ['Planificar', 'Analizar y diseñar', 'Implementar', 'Ejecutar', 'Reportar y cerrar'],
+    pts: [
+      '**Plan de pruebas**: alcance, estrategia, recursos, cronograma y riesgos.',
+      '**Diseño**: casos construidos a partir de los requisitos y de técnicas formales.',
+      '**Implementación**: datos, entornos y suites listos para correr.',
+      '**Ejecución**: correr los casos, registrar resultado y evidencia.',
+      '**Reporte y cierre**: métricas, defectos abiertos y lecciones aprendidas.'
+    ],
+    tip: 'Los criterios de entrada dicen cuándo empezar; los de salida, cuándo se puede decir “listo”.'
+  },
+  {
+    ic: '🏗️', t: 'Niveles y tipos de prueba',
+    p: ['Los **niveles** dicen qué tan grande es lo que probamos; los **tipos** dicen para qué lo probamos.'],
+    tbl: {
+      h: ['Nivel', 'Qué prueba', 'Quién suele hacerlo'],
+      r: [
+        ['**Unitaria**', 'Una función o clase aislada', 'Desarrollo'],
+        ['**Integración**', 'La comunicación entre módulos o servicios', 'Desarrollo y QA'],
+        ['**Sistema**', 'El producto completo contra los requisitos', 'QA'],
+        ['**Aceptación**', 'Si resuelve la necesidad del negocio', 'Negocio y usuarios, con apoyo de QA']
+      ]
+    },
+    pts: [
+      '**Funcional**: ¿hace lo que debe hacer?',
+      '**No funcional**: rendimiento, seguridad, usabilidad, accesibilidad.',
+      '**Humo (smoke)**: ¿lo esencial arranca? Si no, ni se sigue.',
+      '**Regresión**: ¿lo que funcionaba sigue funcionando?',
+      '**Exploratoria**: aprender y probar al mismo tiempo, sin guion fijo.'
+    ]
+  },
+  {
+    ic: '✍️', t: 'Cómo diseñar buenos casos',
+    p: [
+      'Un buen caso es claro, repetible y verificable. Dos técnicas muy usadas son la **partición de equivalencia** (agrupar entradas que se comportan igual y probar una por grupo) y los **valores límite** (probar los bordes, donde más bichos se esconden).'
+    ],
+    ej: 'Un campo acepta edades de **18 a 65**. Clases: menos de 18 (inválida), 18–65 (válida), más de 65 (inválida). Valores límite: **17, 18, 65 y 66**.',
+    pts: [
+      'Un caso, un objetivo: si falla, se sabe por qué.',
+      'Datos concretos y resultado esperado medible.',
+      'Estados típicos de ejecución: **Pendiente, Pasado, Fallido, Bloqueado y Omitido**.'
+    ],
+    tip: 'Bloqueado = algo externo impide ejecutarlo. Fallido = se ejecutó y el resultado no coincidió.'
+  }
+],
+/* ---------------- Nivel 3 · Del Excel al Quality Center ---------------- */
+[
+  {
+    ic: '📚', t: 'La era del Excel y el Word',
+    p: ['Durante años, la gestión de pruebas vivió en hojas de cálculo y documentos. Funcionaba… hasta que el equipo crecía.'],
+    pts: [
+      '**Versiones**: final_v3_ahora_sí.xlsx y nadie sabe cuál es la buena.',
+      '**Sin trazabilidad** entre requisito, caso y defecto.',
+      '**Evidencia dispersa**: capturas en correos, chats y carpetas.',
+      '**Reportes a mano**: horas copiando números para la reunión.',
+      '**Poca colaboración**: dos personas, un solo archivo.'
+    ],
+    tip: 'Excel no es malo: es excelente para calcular. Lo malo es usarlo como base de datos de pruebas.'
+  },
+  {
+    ic: '🕰️', t: 'Línea del tiempo de las herramientas',
+    p: ['El producto estrella de la primera generación cambió de dueño varias veces: **Mercury Interactive → HP → Micro Focus → OpenText**.'],
+    tbl: {
+      h: ['Época', 'Qué pasaba', 'Ejemplos'],
+      r: [
+        ['Años 90', 'Documentos y hojas de cálculo; se popularizan los estándares de documentación', 'IEEE 829, Excel, Word'],
+        ['Finales 90 y 2000', 'Herramientas de escritorio y cliente-servidor para pruebas y defectos', 'TestDirector (Mercury Interactive)'],
+        ['Mediados 2000', 'TestDirector pasa a llamarse Quality Center; aparecen alternativas abiertas', 'Quality Center, TestLink'],
+        ['Años 2010', 'Auge de lo web y la nube, con integración a Jira', 'TestRail, Zephyr, qTest'],
+        ['Hoy', 'Integración con CI/CD, trabajo ágil y asistencia con IA', 'Xray, Azure Test Plans y más']
+      ]
+    },
+    tip: 'Quality Center terminó llamándose ALM; si ves ambos nombres, es la misma familia.'
+  },
+  {
+    ic: '📑', t: 'Estándares que ordenan el juego',
+    p: ['Los estándares no son burocracia: son un idioma común para que dos equipos distintos se entiendan.'],
+    pts: [
+      '**IEEE 829**: definía documentos de prueba como plan, diseño, especificación de casos, procedimiento, registro, informe de incidentes e informe resumen.',
+      '**ISO/IEC/IEEE 29119**: serie que lo sustituyó, con conceptos, procesos, documentación y técnicas.',
+      '**ISTQB**: organización que ofrece certificaciones y un glosario de referencia.'
+    ],
+    tip: 'No hace falta memorizar cada documento; entendé que existen para dejar evidencia y orden.'
+  }
+],
+/* ---------------- Nivel 4 · El menú de la soda ---------------- */
+[
+  {
+    ic: '🍽️', t: 'El menú de herramientas',
+    p: ['Cada herramienta tiene su estilo. Esto es un resumen para orientarte, no una recomendación universal:'],
+    tbl: {
+      h: ['Herramienta', 'Tipo', 'Punto fuerte'],
+      r: [
+        ['**TestRail** (Gurock)', 'Aplicación web independiente', 'Interfaz sencilla y reportes claros'],
+        ['**Zephyr** (SmartBear)', 'App dentro de Jira', 'Todo en Jira, ligera para equipos ágiles'],
+        ['**Xray**', 'App dentro de Jira', 'Pruebas como issues de Jira, soporte de BDD'],
+        ['**qTest** (Tricentis)', 'Plataforma empresarial', 'Pensada para escalar y para muchos equipos'],
+        ['**Azure Test Plans**', 'Parte de Azure DevOps', 'Planes y ejecuciones junto a work items y pipelines'],
+        ['**TestLink**', 'Open source, autoalojada', 'Gratuita y básica; la administrás vos']
+      ]
+    },
+    tip: 'También existen Qase, PractiTest o Kiwi TCMS (open source). Lo importante es el criterio, no la marca.'
+  },
+  {
+    ic: '⚖️', t: 'Cómo elegir sin enamorarse del logo',
+    p: ['Elegir herramienta es una decisión de equipo. Estos criterios suelen pesar más que cualquier campaña de marketing:'],
+    pts: [
+      '**Integraciones**: Jira, CI/CD, automatización, API abierta.',
+      '**Facilidad de uso**: si cuesta usarla, el equipo vuelve al Excel.',
+      '**Costo total**: licencias por persona, hosting, soporte y capacitación.',
+      '**Reportes y trazabilidad** que realmente necesitás.',
+      '**Escalabilidad**, seguridad y cumplimiento si trabajás en sectores regulados.'
+    ],
+    ej: 'Equipo de 10 personas que ya vive en Jira: conviene mirar primero las apps que viven dentro de Jira. Empresa con muchos equipos y exigencias de gobierno: una plataforma empresarial puede encajar mejor.'
+  },
+  {
+    ic: '🧪', t: 'El piloto antes del compromiso',
+    p: ['Antes de comprar, probá. Un piloto de una o dos semanas con un proyecto real revela más que mil demos comerciales.'],
+    flow: ['Definir criterios', 'Elegir 2–3 candidatas', 'Piloto con proyecto real', 'Medir y decidir', 'Adopción y capacitación'],
+    pts: [
+      'Dale **peso** a cada criterio (por ejemplo, integración 30%, costo 20%, facilidad 20%…).',
+      'Medí con **tareas reales**: escribir un caso, ejecutar, reportar un bug, sacar un informe.',
+      'Planificá la **migración y la capacitación**, no solo la compra.'
+    ],
+    tip: 'El piloto cuesta una semana; equivocarse de herramienta puede costar un año.'
+  }
+],
+/* ---------------- Nivel 5 · Trazabilidad ---------------- */
+[
+  {
+    ic: '🔗', t: 'La cadena de la trazabilidad',
+    p: ['Trazabilidad es poder **seguir el hilo** entre lo que el negocio pidió, lo que se probó y lo que se encontró.'],
+    flow: ['Requisito', 'Caso de prueba', 'Ejecución', 'Defecto'],
+    pts: [
+      '**Hacia adelante**: del requisito a sus casos, ejecuciones y defectos.',
+      '**Hacia atrás**: de un defecto al caso y al requisito afectado.'
+    ],
+    ej: 'REQ-07 “Pagar con tarjeta” → TC-21 y TC-22 → ejecución v2.3 → BUG-88.',
+    tip: 'Si no podés explicar de dónde sale un caso, ese caso es huérfano.'
+  },
+  {
+    ic: '🗺️', t: 'La matriz de trazabilidad (RTM)',
+    p: ['La RTM es una tabla que cruza requisitos con casos y resultados. Con un vistazo se ve dónde hay cobertura y dónde no.'],
+    tbl: {
+      h: ['Requisito', 'Casos', 'Último resultado', 'Cobertura'],
+      r: [
+        ['REQ-01 Iniciar sesión', 'TC-01, TC-02', 'Pasado ✅', 'Cubierto'],
+        ['REQ-02 Recuperar clave', 'TC-03', 'Fallido ❌ (BUG-12)', 'Cubierto'],
+        ['REQ-03 Pagar con tarjeta', '—', 'Sin ejecutar', '⚠️ Hueco de cobertura']
+      ]
+    },
+    ej: 'Cobertura de requisitos = 2 con pruebas ÷ 3 totales ≈ **67%**. El hueco es REQ-03: nadie lo está probando.'
+  },
+  {
+    ic: '🔍', t: 'Impacto, cobertura y auditoría',
+    p: ['La trazabilidad no es un adorno: se usa todos los días y, en sectores regulados, se exige.'],
+    pts: [
+      '**Análisis de impacto**: si cambia un requisito, la matriz dice qué casos revisar.',
+      '**Cobertura**: detecta requisitos sin pruebas y casos sin requisito.',
+      '**Auditoría**: en banca, salud o seguros hay que demostrar qué se probó, cuándo y con qué resultado.',
+      '**En Jira**: enlazar tests a historias permite medir cobertura en los reportes.'
+    ],
+    tip: 'Cuando cambia algo, la primera pregunta sana es: ¿qué más toca esto?'
+  }
+],
+/* ---------------- Nivel 6 · Cazando bichos ---------------- */
+[
+  {
+    ic: '📝', t: 'El reporte de defecto perfecto',
+    p: ['Un buen reporte le ahorra al equipo una reunión entera. Un mal reporte genera preguntas, ping-pong y enojo.'],
+    pts: [
+      '**Título claro**: qué falla y dónde.',
+      '**Entorno y versión**: navegador, dispositivo, build.',
+      '**Pasos para reproducir**, numerados y con datos concretos.',
+      '**Resultado esperado vs. resultado real.**',
+      '**Evidencia**: captura, video o log.',
+      '**Severidad y prioridad** propuestas.'
+    ],
+    ej: 'Mal título: “No sirve el login”. Buen título: “Login: con clave válida devuelve error 500 al usar Chrome (v2.3.1)”.',
+    tip: '“En mi máquina sí funciona” no es un argumento: es una pista sobre el entorno.'
+  },
+  {
+    ic: '🚦', t: 'Severidad vs. prioridad',
+    p: ['**Severidad** = qué tanto daña técnicamente. **Prioridad** = qué tan rápido hay que arreglarlo. No siempre van de la mano.'],
+    tbl: {
+      h: ['Situación', 'Severidad', 'Prioridad'],
+      r: [
+        ['Error de ortografía en el logo de la portada', 'Baja', 'Alta'],
+        ['Falla en una pantalla de administración que se usa una vez al año', 'Alta', 'Baja'],
+        ['El botón de pago no responde en producción', 'Alta', 'Alta'],
+        ['Tipografía distinta en una pantalla vieja', 'Baja', 'Baja']
+      ]
+    },
+    tip: 'La severidad la suele proponer QA; la prioridad la decide el negocio.'
+  },
+  {
+    ic: '🔄', t: 'El ciclo de vida de un defecto',
+    p: ['Los nombres de los estados cambian entre herramientas, pero la lógica es la misma:'],
+    flow: ['Nuevo', 'Asignado', 'En progreso', 'Resuelto', 'Verificado', 'Cerrado'],
+    pts: [
+      '**Reabierto**: el bicho volvió tras cerrarse.',
+      '**Rechazado**: no era un defecto (o no se puede reproducir).',
+      '**Duplicado**: ya estaba reportado.',
+      '**Diferido**: se corregirá en una versión futura.'
+    ],
+    tip: 'Después de un arreglo, QA siempre hace el retest: nunca se cierra “por confianza”.'
+  }
+],
+/* ---------------- Nivel 7 · Métricas ---------------- */
+[
+  {
+    ic: '📊', t: 'Las métricas básicas',
+    p: ['Medir sirve para decidir, no para decorar. Estas son las más comunes (KLOC = miles de líneas de código):'],
+    tbl: {
+      h: ['Métrica', 'Fórmula', 'Qué cuenta'],
+      r: [
+        ['**% de ejecución**', 'ejecutados ÷ planeados × 100', 'Cuánto del plan ya se corrió'],
+        ['**Pass rate**', 'pasados ÷ ejecutados × 100', 'Calidad de lo ejecutado'],
+        ['**Densidad de defectos**', 'defectos ÷ KLOC', 'Qué tan concentrados están los bichos'],
+        ['**Defect leakage**', 'defectos en producción ÷ total × 100', 'Lo que se escapó'],
+        ['**DDE**', 'hallados antes ÷ (antes + escapados) × 100', 'Eficacia de las pruebas']
+      ]
+    }
+  },
+  {
+    ic: '🧮', t: 'Un ejemplo con números',
+    p: ['Un release tiene 200 casos planeados. Se ejecutaron 150 y pasaron 135. Antes del lanzamiento se hallaron 40 defectos y en producción aparecieron 10.'],
+    pts: [
+      '**% de ejecución** = 150 ÷ 200 = **75%**',
+      '**Pass rate** = 135 ÷ 150 = **90%**',
+      '**Defect leakage** = 10 ÷ (40 + 10) = **20%**',
+      '**DDE** = 40 ÷ (40 + 10) = **80%**'
+    ],
+    tip: 'Fijate que leakage y DDE son dos caras de la misma moneda: suman 100%.'
+  },
+  {
+    ic: '⚠️', t: 'Leer métricas sin que nos engañen',
+    p: ['Un número solo cuenta media historia. Estas son las trampas más comunes:'],
+    pts: [
+      '**Métrica vanidosa**: se ve bien pero no ayuda a decidir (“1000 casos ejecutados” sin hablar de cobertura).',
+      '**Ley de Goodhart**: cuando una medida se vuelve meta, se manipula y deja de medir bien.',
+      'No evalúes personas por cantidad de bugs: se esconden o se inflan.',
+      'Combiná métricas: pass rate + ejecución + cobertura + leakage.',
+      'Mirá **tendencias**, no fotos aisladas.'
+    ],
+    ej: '100% de pass rate con 3 casos ejecutados de 200… es puro humo.'
+  }
+],
+/* ---------------- Nivel 8 · Que trabaje la máquina ---------------- */
+[
+  {
+    ic: '🔌', t: 'El flujo automático',
+    p: ['La idea es que nadie tenga que copiar resultados a mano. Cada cambio dispara pruebas y los resultados viajan solos hasta la herramienta de gestión.'],
+    flow: ['Commit', 'Pipeline CI', 'Corren las automatizadas', 'Resultados JUnit XML', 'API de la herramienta', 'Reporte listo'],
+    pts: [
+      'Los pipelines viven en Jenkins, GitHub Actions o GitLab CI.',
+      'Los frameworks que ejecutan son Playwright, Selenium o pytest, entre otros.',
+      'La **API REST** de TestRail, Xray o qTest recibe los resultados y los asocia a casos.',
+      'Herramientas como Allure generan reportes visuales.'
+    ]
+  },
+  {
+    ic: '🤖', t: '¿Qué conviene automatizar?',
+    p: ['Automatizar cuesta tiempo al inicio; se paga cuando algo se repite muchas veces y cambia poco.'],
+    tbl: {
+      h: ['Buen candidato', 'Mejor dejarlo manual (por ahora)'],
+      r: [
+        ['Humo y regresión repetitiva', 'Pruebas exploratorias'],
+        ['Verificaciones de API', 'Usabilidad y experiencia de uso'],
+        ['Datos con muchas combinaciones', 'Funcionalidad que cambia cada sprint'],
+        ['Flujos estables y críticos', 'Pruebas de una sola vez']
+      ]
+    },
+    tip: 'Automatizá lo aburrido y repetitivo; dejale al humano lo curioso.'
+  },
+  {
+    ic: '🎲', t: 'El enemigo: los tests flaky',
+    p: ['Un test **flaky** pasa y falla sin que el código cambie. Es peligroso porque nadie vuelve a confiar en el pipeline.'],
+    pts: [
+      '**Causas comunes**: esperas fijas (sleep), datos compartidos, pruebas que dependen del orden, entornos inestables.',
+      '**Cura**: esperas por condición, datos propios por prueba, pruebas independientes, entornos controlados.',
+      '**Mientras tanto**: ponelo en cuarentena para que no tumbe el pipeline y abrí una tarea para arreglarlo.'
+    ],
+    tip: 'Reintentar hasta que pase no es solución: es esconder el bicho debajo de la alfombra.'
+  }
+],
+/* ---------------- Nivel 9 · Pensar antes del chapuzón ---------------- */
+[
+  {
+    ic: '⚡', t: 'Pruebas basadas en riesgo',
+    p: ['No hay tiempo para probar todo, así que se prueba primero lo que más duele si falla. **Riesgo = probabilidad × impacto.**'],
+    tbl: {
+      h: ['Funcionalidad', 'Probabilidad de fallo', 'Impacto', 'Orden'],
+      r: [
+        ['Pagar con tarjeta', 'Media', 'Muy alto', '1.º'],
+        ['Iniciar sesión', 'Baja', 'Alto', '2.º'],
+        ['Cambiar foto de perfil', 'Media', 'Bajo', '3.º'],
+        ['Pantalla “Acerca de”', 'Baja', 'Muy bajo', 'Último']
+      ]
+    },
+    tip: 'Con poco tiempo, cubrí primero lo de mayor riesgo y reportá con honestidad lo que quedó sin probar.'
+  },
+  {
+    ic: '🔺', t: 'Pirámide de pruebas y shift-left',
+    p: ['La pirámide propone una distribución sana del esfuerzo de automatización:'],
+    pts: [
+      '**Base**: muchas pruebas unitarias, rápidas y baratas.',
+      '**Medio**: algunas pruebas de integración y de API.',
+      '**Punta**: pocas pruebas E2E por interfaz, lentas y frágiles.',
+      '**Cono de helado**: anti-patrón con muchas pruebas manuales o E2E y casi nada unitario.',
+      '**Shift-left**: involucrar a QA desde los requisitos y las revisiones, no solo al final.'
+    ],
+    tip: 'Un defecto hallado en un requisito cuesta casi nada; hallado en producción, mucho más.'
+  },
+  {
+    ic: '🚚', t: 'Madurez y migraciones',
+    p: ['**TMMi** es un modelo que mide qué tan madura es la organización probando. Migrar de herramienta, en cambio, es un proyecto, no un clic.'],
+    tbl: {
+      h: ['Nivel TMMi', 'Nombre', 'Idea'],
+      r: [
+        ['1', 'Inicial', 'Pruebas improvisadas'],
+        ['2', 'Gestionado', 'Hay plan y control básico'],
+        ['3', 'Definido', 'Proceso estándar en la organización'],
+        ['4', 'Medido', 'Decisiones con métricas'],
+        ['5', 'Optimización', 'Mejora continua y prevención']
+      ]
+    },
+    pts: [
+      '**Inventariá** lo que existe: proyectos, casos, ejecuciones y adjuntos.',
+      '**Mapeá** estados, prioridades y campos personalizados.',
+      'Hacé un **piloto** con un proyecto pequeño.',
+      '**Validá** con conteos antes y después de migrar.',
+      'Tené **respaldo** y plan de reversa.'
+    ]
+  }
+],
+/* ---------------- Nivel 10 · Jefe de QA ---------------- */
+[
+  {
+    ic: '🧠', t: 'Criterio de jefe: decidir con evidencia',
+    p: ['Ser jefe de QA no es saber más comandos: es tomar buenas decisiones cuando no alcanza el tiempo.'],
+    ej: 'Tenés 400 casos y un solo día. No corrás al azar ni maquilles el reporte: priorizá por riesgo y reportá la cobertura real.',
+    pts: [
+      '¿Qué es lo de **mayor riesgo** para el negocio?',
+      '¿Qué **cambió** en esta versión?',
+      '¿Dónde han aparecido **más defectos** antes?',
+      'Reportá lo probado, lo no probado y el riesgo que queda.'
+    ],
+    tip: 'Un reporte honesto con 60% de cobertura vale más que un 100% inventado.'
+  },
+  {
+    ic: '🔁', t: 'Mantenimiento: pasos compartidos y BDD',
+    p: [
+      'Las suites crecen y se ensucian. Los **pasos compartidos** (shared steps) permiten editar una sola vez un paso que usan muchos casos. Y el estilo **BDD** escribe los casos en lenguaje de negocio (Gherkin):'
+    ],
+    code: 'Escenario: Pago exitoso con tarjeta\n  Dado que tengo saldo suficiente\n  Cuando pago con mi tarjeta\n  Entonces veo la confirmación del pedido',
+    pts: [
+      'Revisá la suite cada tanto: **retirá** casos obsoletos y duplicados.',
+      'Usá **nombres y etiquetas** consistentes.',
+      'Hacé **revisión entre pares** de los casos importantes.'
+    ]
+  },
+  {
+    ic: '🏛️', t: 'Gobierno, auditoría y mejora continua',
+    p: ['Con equipos grandes, el orden es lo que permite crecer sin perder el control.'],
+    pts: [
+      '**Fuente única de verdad**: el estado oficial vive en una sola herramienta, no en 14 chats.',
+      '**Roles y permisos**: quién crea, quién aprueba y quién ejecuta.',
+      '**Historial de cambios** (audit trail) y versionado de casos.',
+      '**Informe de cierre** con métricas leídas en conjunto.',
+      '**Lecciones aprendidas** y mejora continua después de cada release.'
+    ],
+    tip: 'Cuando alguien pregunta “¿esto se probó?”, la respuesta debe estar a un clic, con evidencia.'
+  }
+]
+];
+
+/* =====================================================================
+   3. GLOSARIO: [nivel, emoji, término, definición]
+   ===================================================================== */
+const G = [
+  [1, '🏅', 'QA', 'Aseguramiento de la calidad: actividades de proceso para prevenir defectos.'],
+  [1, '🔎', 'QC', 'Control de calidad: actividades sobre el producto para detectar defectos. Las pruebas son QC.'],
+  [1, '🐞', 'Error, defecto y fallo', 'Error: equivocación humana. Defecto: el error en el código. Fallo: el defecto se manifiesta al ejecutar.'],
+  [1, '🛠️', 'Verificación', '¿Estamos construyendo el producto correctamente? Se revisa contra la especificación.'],
+  [1, '🎯', 'Validación', '¿Estamos construyendo el producto correcto? Se confirma con la necesidad real de la persona usuaria.'],
+  [1, '📋', 'Caso de prueba', 'Precondiciones, pasos, datos y resultado esperado para verificar algo concreto.'],
+  [1, '🔮', 'Oráculo', 'La fuente que dice cuál es el resultado esperado: un requisito, una especificación o el sistema anterior.'],
+  [2, '🗓️', 'Plan de pruebas', 'Documento con alcance, estrategia, recursos, cronograma y riesgos de las pruebas.'],
+  [2, '🧺', 'Suite', 'Conjunto de casos de prueba agrupados con un propósito, como regresión o humo.'],
+  [2, '🔁', 'Ciclo o test run', 'Ejecución de casos contra una versión concreta del software.'],
+  [2, '🚦', 'Criterios de entrada y salida', 'Condiciones para comenzar y para dar por terminada una fase de pruebas.'],
+  [2, '💨', 'Prueba de humo', 'Chequeo rápido de que lo esencial arranca antes de seguir con pruebas más profundas.'],
+  [2, '↩️', 'Regresión', 'Probar de nuevo para confirmar que un cambio no rompió lo que ya funcionaba.'],
+  [2, '✔️', 'Retest o confirmación', 'Repetir el caso que falló para confirmar que el arreglo funciona.'],
+  [2, '🧩', 'Partición de equivalencia', 'Agrupar entradas que se comportan igual y probar un representante de cada grupo.'],
+  [2, '📏', 'Valores límite', 'Probar los bordes de un rango: justo en el límite, debajo y encima.'],
+  [3, '📊', 'Hoja de cálculo', 'Herramienta muy usada antes de las plataformas de pruebas; difícil de versionar y trazar.'],
+  [3, '🏛️', 'Quality Center / ALM', 'Evolución de TestDirector de Mercury Interactive; hoy bajo OpenText.'],
+  [3, '📘', 'IEEE 829', 'Estándar clásico de documentación de pruebas, sustituido por ISO/IEC/IEEE 29119.'],
+  [3, '🌍', 'ISO/IEC/IEEE 29119', 'Serie de estándares internacionales sobre procesos, documentación y técnicas de prueba.'],
+  [3, '🆓', 'Open source', 'Software con código abierto, como TestLink o Kiwi TCMS, que se instala y administra por cuenta propia.'],
+  [3, '🗄️', 'Repositorio de pruebas', 'Lugar central donde viven los casos, las ejecuciones y la evidencia.'],
+  [4, '☁️', 'SaaS', 'Herramienta que se usa por internet sin instalar nada; el proveedor la aloja y la actualiza.'],
+  [4, '🧱', 'App dentro de Jira', 'Extensión (como Zephyr o Xray) que agrega la gestión de pruebas dentro de Jira.'],
+  [4, '🏢', 'Plataforma empresarial', 'Herramienta pensada para muchos equipos y proyectos, como qTest.'],
+  [4, '🧾', 'Campo personalizado', 'Dato extra que se agrega a un caso o defecto según las necesidades del equipo.'],
+  [4, '🧪', 'Piloto', 'Prueba de una herramienta con un proyecto real antes de adoptarla.'],
+  [5, '🗺️', 'Matriz de trazabilidad (RTM)', 'Tabla que cruza requisitos con casos de prueba y su estado.'],
+  [5, '📐', 'Cobertura de requisitos', 'Requisitos con al menos una prueba, dividido entre el total de requisitos.'],
+  [5, '🕸️', 'Análisis de impacto', 'Revisar qué casos y componentes se ven afectados cuando algo cambia.'],
+  [5, '➡️', 'Trazabilidad hacia adelante', 'Seguir un requisito hasta sus casos, ejecuciones y defectos.'],
+  [5, '⬅️', 'Trazabilidad hacia atrás', 'Partir de un caso o defecto y volver al requisito que lo originó.'],
+  [5, '👻', 'Caso huérfano', 'Caso de prueba que no responde a ningún requisito conocido.'],
+  [6, '💥', 'Severidad', 'Impacto técnico de un defecto en el sistema.'],
+  [6, '⏱️', 'Prioridad', 'Urgencia con la que hay que corregir un defecto.'],
+  [6, '🔄', 'Ciclo de vida del defecto', 'Estados por los que pasa un bicho: nuevo, asignado, resuelto, verificado, cerrado y más.'],
+  [6, '♻️', 'Reabierto', 'Estado de un defecto que reaparece después de haberse cerrado.'],
+  [6, '👯', 'Duplicado', 'Defecto reportado más de una vez; se enlaza al original y se cierra.'],
+  [6, '📸', 'Evidencia', 'Capturas, videos o logs que demuestran lo ocurrido durante una prueba.'],
+  [7, '✅', 'Pass rate', 'Casos pasados entre casos ejecutados, por cien.'],
+  [7, '🚰', 'Defect leakage', 'Porcentaje de defectos que se escapan a producción.'],
+  [7, '🎣', 'DDE', 'Defect Detection Effectiveness: defectos hallados antes del release entre el total, por cien.'],
+  [7, '🧮', 'Densidad de defectos', 'Defectos divididos entre el tamaño del software (por ejemplo, por KLOC).'],
+  [7, '📉', 'Burn-down de pruebas', 'Gráfico de los casos pendientes a lo largo del tiempo.'],
+  [7, '🎭', 'Métrica vanidosa', 'Número que se ve bien pero no ayuda a decidir nada.'],
+  [8, '🔗', 'CI/CD', 'Integración y entrega continuas: cada cambio dispara compilación y pruebas automáticas.'],
+  [8, '🚇', 'Pipeline', 'Secuencia automática de pasos (compilar, probar, desplegar) que se dispara con cada cambio.'],
+  [8, '📄', 'JUnit XML', 'Formato muy común para guardar y compartir resultados de pruebas.'],
+  [8, '🎲', 'Test flaky', 'Prueba que pasa y falla sin cambios en el código.'],
+  [8, '🔌', 'API REST', 'Interfaz para que programas se hablen entre sí; sirve para subir resultados a la herramienta de gestión.'],
+  [8, '🎭', 'Framework de automatización', 'Conjunto de herramientas para escribir y ejecutar pruebas automáticas, como Playwright, Selenium o pytest.'],
+  [9, '⚡', 'Pruebas basadas en riesgo', 'Priorizar según probabilidad por impacto de un fallo.'],
+  [9, '🔺', 'Pirámide de pruebas', 'Muchas pruebas unitarias, algunas de integración y pocas E2E.'],
+  [9, '⬅️', 'Shift-left', 'Mover las pruebas y las revisiones lo más temprano posible en el proyecto.'],
+  [9, '🪜', 'TMMi', 'Modelo de madurez de las pruebas, con cinco niveles.'],
+  [9, '🚚', 'Migración', 'Mover casos, historial y adjuntos de una herramienta a otra, con mapeo de campos y validación.'],
+  [10, '📍', 'Fuente única de verdad', 'El estado oficial de las pruebas vive en una sola herramienta.'],
+  [10, '🧬', 'Pasos compartidos', 'Pasos reutilizables que se editan una vez y se actualizan en todos los casos que los usan.'],
+  [10, '🥒', 'BDD y Gherkin', 'Escribir casos como Dado / Cuando / Entonces, en lenguaje comprensible para el negocio.'],
+  [10, '🧹', 'Deuda de pruebas', 'Casos obsoletos, duplicados o sin dueño que cuestan tiempo y estorban.'],
+  [10, '🕵️', 'Auditoría', 'Revisión que exige evidencia de qué se probó, cuándo y con qué resultado.']
+];
+
+/* =====================================================================
+   4. UTILIDADES
+   ===================================================================== */
+const $ = s => document.querySelector(s);
+const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+const md = s => esc(s).replace(/\*\*(.+?)\*\*/g, '<b>$1</b>');
+const norm = s => String(s).normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
+const sh = a => { a = [...a]; for (let i = a.length; i > 1;) { const j = Math.random() * i-- | 0; [a[i], a[j]] = [a[j], a[i]]; } return a; };
+const rnd = a => a[Math.random() * a.length | 0];
+const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+const COL = ['var(--b)', 'var(--r)', 'var(--y)', 'var(--g)', 'var(--p)'];
+const AUTORES = ['Dylan Montoya', 'Coralie Mathieu Vásquez', 'Brandon Membreño', 'Dereck Cerdas'];
+const AUCOL = ['var(--b)', 'var(--r)', 'var(--g)', 'var(--p)'];
+const iniciales = n => n.split(' ').slice(0, 2).map(w => w[0]).join('').toUpperCase();
+
+/* Sonido opcional (WebAudio, sin archivos externos) */
+const SFX = {
+  ctx: null,
+  beep(f, d = .12, type = 'sine', v = .06) {
+    if (!BE.state.sound) return;
+    try {
+      this.ctx = this.ctx || new (window.AudioContext || window.webkitAudioContext)();
+      const o = this.ctx.createOscillator(), g = this.ctx.createGain(), n = this.ctx.currentTime;
+      o.type = type;
+      o.frequency.value = f;
+      g.gain.setValueAtTime(v, n);
+      g.gain.exponentialRampToValueAtTime(.0001, n + d);
+      o.connect(g);
+      g.connect(this.ctx.destination);
+      o.start(n);
+      o.stop(n + d);
+    } catch (e) {}
+  },
+  ok() { this.beep(660); setTimeout(() => this.beep(880), 90); },
+  no() { this.beep(180, .22, 'sawtooth', .04); },
+  win() { [523, 659, 784, 1047].forEach((f, i) => setTimeout(() => this.beep(f, .18), i * 110)); }
+};
+
+/* =====================================================================
+   5. BACK-END: sesión, reglas, persistencia y ranking
+   ===================================================================== */
+const DEF = () => ({ nick: '', best: {}, read: {}, got: [], flags: {}, bestStreak: 0, ans: 0, cor: 0, theme: '', sound: false });
+const BE = {
+  key: 'pura-vida-qa-v1', state: DEF(), db: null, uid: null,
+  load() { try { Object.assign(this.state, JSON.parse(localStorage.getItem(this.key))); } catch (e) {} },
+  save() { try { localStorage.setItem(this.key, JSON.stringify(this.state)); } catch (e) {} },
+  reset() {
+    const { nick, theme, sound } = this.state;
+    this.state = Object.assign(DEF(), { nick, theme, sound });
+    this.save();
+  },
+  total() { return Object.entries(this.state.best).reduce((s, [l, n]) => s + n * l, 0); },
+  stars(l) { return Math.max(0, (this.state.best[l] || 0) - PASS + 1); },
+  unlocked(l) { return l == 1 || (this.state.best[l - 1] || 0) >= PASS; },
+  session(l) {
+    const qs = sh(LV[l - 1][2].trim().split('\n')).map(r => {
+      const [q, ...o] = r.split('|'), x = sh(o);
+      return { q, o: x, a: x.indexOf(o[0]) };
+    });
+    return { l, qs, i: 0, ok: 0, h: [], st: 0, top: 0, hints: 1, rev: [], lock: false, nav: false, on: false };
+  },
+  record(l, n) {
+    const b = this.state.best;
+    if (n > (b[l] || 0)) b[l] = n;
+    this.state.ans += 7;
+    this.state.cor += n;
+    this.save();
+    this.sync();
+  },
+  async init() {
+    try {
+      const c = window.claude;
+      if (!c) return;
+      this.db = await c.use('db');
+      const u = await c.use('user');
+      this.uid = u && await u.id();
+    } catch (e) { this.db = null; }
+  },
+  async sync() {
+    await this.ready;
+    if (!this.db || !this.uid || !this.total()) return;
+    try { await this.db.doc('ranking/' + this.uid).set({ nick: this.state.nick || 'Mae anónimo', score: this.total(), t: Date.now() }); } catch (e) {}
+  },
+  async top() {
+    await this.ready;
+    if (!this.db) return null;
+    try {
+      const s = await this.db.collection('ranking').orderBy('score', 'desc').limit(10).get();
+      return s.docs.map(d => d.data());
+    } catch (e) { return null; }
+  }
+};
+BE.load();
+BE.ready = BE.init();
+
+/* =====================================================================
+   6. FRONT-END: navegación con transiciones 3D
+   ===================================================================== */
+const app = $('#app');
+let S = null, TP = null, busy = 0, GF = { q: '', l: 0 };
+
+function stagger() {
+  [...app.children].forEach((c, i) => { c.classList.add('rs'); c.style.setProperty('--n', i); });
+}
+function show(render, dir = 1) {
+  if (reduce) { render(); stagger(); window.scrollTo(0, 0); return; }
+  clearTimeout(busy);
+  app.className = 'out-' + (dir > 0 ? 'f' : 'b');
+  busy = setTimeout(() => {
+    render();
+    stagger();
+    window.scrollTo(0, 0);
+    app.className = 'in-' + (dir > 0 ? 'f' : 'b');
+    busy = setTimeout(() => { app.className = ''; }, 700);
+  }, 210);
+}
+function toast(t) {
+  const d = document.createElement('div');
+  d.className = 'toast';
+  d.textContent = t;
+  $('#ts').appendChild(d);
+  setTimeout(() => d.remove(), 3500);
+  SFX.win();
+}
+function setPts() {
+  const el = $('#pts'), t = BE.total();
+  if (!el || el.dataset.v == String(t)) return;
+  el.dataset.v = t;
+  el.textContent = '⭐ ' + t;
+  el.classList.remove('bump');
+  void el.offsetWidth;
+  el.classList.add('bump');
+}
+function checkBadges() {
+  const s = BE.state;
+  BADGES.forEach(b => {
+    if (b[3](s) && !s.got.includes(b[1])) {
+      s.got.push(b[1]);
+      BE.save();
+      toast(b[0] + ' ¡Insignia desbloqueada: ' + b[1] + '!');
+    }
+  });
+}
+function countUp(el, to, ms = 900) {
+  if (!el) return;
+  if (reduce || !to) { el.textContent = to; return; }
+  const t0 = performance.now();
+  (function f(t) {
+    const p = Math.min(1, (t - t0) / ms);
+    el.textContent = Math.round(to * (1 - Math.pow(1 - p, 3)));
+    if (p < 1 && el.isConnected) requestAnimationFrame(f);
+  })(t0);
+}
+function boom(n = 24) {
+  if (reduce) return;
+  for (let k = 0; k < n; k++) {
+    const s = document.createElement('i');
+    s.className = 'cf';
+    s.textContent = rnd(['🇨🇷', '🎉', '☕', '🌺', '🦜', '⭐']);
+    s.style.cssText = `left:${Math.random() * 100}vw;animation-delay:${Math.random() * .5}s;--rot:${(Math.random() * 720 - 360) | 0}deg;--dx:${(Math.random() * 160 - 80) | 0}px`;
+    document.body.appendChild(s);
+    setTimeout(() => s.remove(), 2900);
+  }
+}
+
+/* =====================================================================
+   7. PANTALLA: INICIO (mapa de niveles)
+   ===================================================================== */
+function home() { show(drawHome, -1); }
+function drawHome() {
+  TP = null;
+  if (S) S.on = false;
+  const st = BE.state, pct = st.ans ? Math.round(st.cor / st.ans * 100) : 0;
+  app.innerHTML = `<span class="tag">Gestión de pruebas · Edición tica</span>
+  <div class="hero">
+    <div class="cubewrap" title="¡Gire, mae!"><div class="cube">${['🦜', '🦥', '🐸', '☕', '🌋', '🌺'].map(e => `<b>${e}</b>`).join('')}</div></div>
+    <h1>Pura Vida <em>QA</em></h1>
+  </div>
+  <div class="zoo">${['🦜', '🦥', '🐸', '☕', '🌋', '🌺', '🦋'].map((e, i) => `<span style="--i:${i}">${e}</span>`).join('')}</div>
+  <div class="autores"><span class="tag">Autores</span>
+    <div class="aut">${AUTORES.map((n, i) => `<span class="au" style="--i:${i};--c:${AUCOL[i % AUCOL.length]}"><i aria-hidden="true">${esc(iniciales(n))}</i>${esc(n)}</span>`).join('')}</div>
+  </div>
+  <p class="mut">10 niveles, 7 preguntas por nivel y cada vez más difíciles. Cada nivel trae <b>lecciones</b>, <b>tarjetas 3D</b> y una <b>escena tica</b> antes de la práctica. Con 5 de 7 pasás de nivel. ¡Upe! ¿Quién se anima?</p>
+  <div class="card"><label class="tag" for="nick">Tu apodo</label><input id="nick" maxlength="16" placeholder="Ej: El Mae del QA" value="${esc(st.nick)}"></div>
+  <div class="card dato tilt" data-t="5">💡 <b>Dato tico:</b> <span id="dt">${rnd(DATOS)}</span><br><button class="mini" onclick="otroDato()">🎲 Otro dato</button></div>
+  <button class="go" style="width:100%;margin:0" onclick="gloss()">📚 Abrir el glosario tico (${G.length} términos)</button>
+  <div class="card"><span class="tag">Insignias · ${st.got.length}/${BADGES.length}</span>
+    <div class="badges">${BADGES.map(b => {
+      const on = st.got.includes(b[1]);
+      return `<div class="bd ${on ? 'on' : ''}" title="${esc(b[1] + ' — ' + b[2])}"><span>${on ? b[0] : '🔒'}</span><small>${esc(b[1])}</small></div>`;
+    }).join('')}</div>
+  </div>
+  <div class="grid">${LV.map((L, i) => {
+    const l = i + 1, ok = BE.unlocked(l);
+    return `<button class="lv tilt" data-l="${l}" data-t="16" style="--i:${i}" title="${esc(L[0])}" ${ok ? '' : 'disabled'}><span class="ic">${ok ? ICO[i] : '🔒'}</span>${l}<small>${'★'.repeat(BE.stars(l)) || (st.read[l] ? '📖' : '')}</small></button>`;
+  }).join('')}</div>
+  <div class="card"><span class="tag">Tus puntos: ${BE.total()} · Ranking top 10</span><ol id="rk"><li class="mut">Cargando…</li></ol>
+    <p class="mut" style="margin:12px 0 0;font-size:.85rem">Precisión: ${pct}% · Mejor racha: ${st.bestStreak}</p>
+  </div>
+  <button class="mini" id="rs" onclick="askReset()">🗑️ Reiniciar progreso</button>`;
+  app.querySelectorAll('.lv').forEach(e => e.onclick = () => theory(+e.dataset.l));
+  $('#nick').oninput = e => { st.nick = e.target.value.slice(0, 16); BE.save(); };
+  rank();
+}
+async function rank() {
+  const r = await BE.top(), el = $('#rk');
+  if (!el) return;
+  el.innerHTML = r === null
+    ? '<li class="mut">Ranking no disponible aquí; tu progreso se guarda en este dispositivo.</li>'
+    : r.length
+      ? r.map(x => `<li>${esc(x.nick || 'Mae')} — <b>${+x.score || 0}</b></li>`).join('')
+      : '<li class="mut">Nadie todavía. ¡Sea el primero, mae!</li>';
+}
+function otroDato() {
+  const el = $('#dt');
+  if (!el) return;
+  el.style.opacity = 0;
+  setTimeout(() => { el.textContent = rnd(DATOS); el.style.opacity = 1; }, 200);
+}
+function askReset() {
+  const b = $('#rs');
+  if (b.dataset.s) { BE.reset(); setPts(); home(); return; }
+  b.dataset.s = 1;
+  b.textContent = '⚠️ ¿Seguro? Tocá otra vez';
+  setTimeout(() => { if (b.isConnected) { delete b.dataset.s; b.textContent = '🗑️ Reiniciar progreso'; } }, 3500);
+}
+
+/* =====================================================================
+   8. PANTALLA: TEORÍA (visor de páginas con giro 3D)
+   ===================================================================== */
+const ln = r => {
+  const c = CH[r[0]];
+  return `<div class="ln${r[0] == 'Y' ? ' r' : ''}"><span class="av" title="${c[1]}">${c[0]}</span><div class="bu"><b>${c[1]}</b>${esc(r.slice(2))}</div></div>`;
+};
+const flowHTML = a => `<div class="flow">${a.map((s, i) =>
+  `<span class="st" style="--i:${i}">${esc(s)}</span>${i < a.length - 1 ? `<span class="ar" style="--i:${i}">➜</span>` : ''}`).join('')}</div>`;
+const tblHTML = t => `<div class="tb"><table><thead><tr>${t.h.map(x => `<th>${esc(x)}</th>`).join('')}</tr></thead><tbody>${
+  t.r.map((r, i) => `<tr style="--i:${i}">${r.map(c => `<td>${md(c)}</td>`).join('')}</tr>`).join('')}</tbody></table></div>`;
+const fc = (g, i) => `<div class="fc" style="--i:${i};--c:${COL[g[0] % 5]}" tabindex="0" role="button" aria-label="Tarjeta: ${esc(g[2])}"><div class="fi">
+  <div class="ff f-front"><span class="ic">${g[1]}</span><b>${esc(g[2])}</b><small>Nivel ${g[0]} · tocá para voltear</small></div>
+  <div class="ff f-back"><p>${esc(g[3])}</p></div></div></div>`;
+
+function pages(l) {
+  return [{ k: 'intro' }, ...TH[l - 1].map(x => ({ k: 'lec', x })), { k: 'cards' }, { k: 'scene' }];
+}
+function introHTML(l) {
+  const L = LV[l - 1], T = TH[l - 1];
+  return `<span class="tag">Introducción</span>
+  <div class="bigw"><span class="bigic">${ICO[l - 1]}</span></div>
+  <p>${esc(L[1])}</p>
+  <h3>En esta unidad vas a ver:</h3>
+  <ul class="pts">${T.map((x, i) => `<li style="--i:${i}">${x.ic} ${esc(x.t)}</li>`).join('')}
+    <li style="--i:${T.length}">🃏 Tarjetas clave para repasar</li>
+    <li style="--i:${T.length + 1}">🎭 Una escena tica para practicar</li></ul>
+  <div class="tip"><b>💡 Tip</b><br>Usá los botones, las flechas del teclado o deslizá el dedo para pasar de página.</div>`;
+}
+function lecHTML(x, n, N) {
+  return `<span class="tag">Lección ${n} de ${N}</span><h2 class="ph">${x.ic} ${esc(x.t)}</h2>`
+    + (x.p || []).map(t => `<p>${md(t)}</p>`).join('')
+    + (x.flow ? flowHTML(x.flow) : '')
+    + (x.tbl ? tblHTML(x.tbl) : '')
+    + (x.pts ? `<ul class="pts">${x.pts.map((t, i) => `<li style="--i:${i}">${md(t)}</li>`).join('')}</ul>` : '')
+    + (x.code ? `<pre class="code">${esc(x.code)}</pre>` : '')
+    + (x.ej ? `<div class="ej"><b>🧪 Ejemplo</b><br>${md(x.ej)}</div>` : '')
+    + (x.tip ? `<div class="tip"><b>💡 Truco tico</b><br>${md(x.tip)}</div>` : '');
+}
+function cardsHTML(l) {
+  const g = G.filter(x => x[0] == l);
+  return `<span class="tag">Tarjetas clave</span><h2 class="ph">🃏 Voltealas y repasá</h2>
+  <p class="mut">Tocá cada tarjeta para ver su definición. Si te las sabés, ya casi estás listo para la escena.</p>
+  <div class="fgrid">${g.map(fc).join('')}</div>`;
+}
+function sceneInto(l, el) {
+  const [t, d, q] = SC[l - 1], O = sh([[q[1], q[2], 1], [q[3], q[4], 0]]);
+  el.innerHTML = `<span class="tag">Escena ${l} · ${esc(t)}</span>` + d.split('\n').map(ln).join('')
+    + `<div class="play"><b>🎮 ${esc(q[0])}</b><div class="opts">${O.map((o, i) => `<button class="op" style="--i:${i}">${esc(o[0])}</button>`).join('')}</div><div class="rx"></div></div>`;
+  const bs = el.querySelectorAll('.opts button');
+  bs.forEach((b, k) => b.onclick = () => {
+    bs.forEach((x, j) => { x.disabled = true; if (O[j][2]) x.classList.add('ok'); else if (j == k) x.classList.add('bad'); });
+    el.querySelector('.rx').innerHTML = ln(O[k][1]);
+    if (O[k][2]) { boom(14); SFX.ok(); } else SFX.no();
+  });
+}
+function theory(l, i = 0) { show(() => drawTheory(l, i), 1); }
+function drawTheory(l, i = 0) {
+  if (S) S.on = false;
+  const L = LV[l - 1];
+  TP = { l, i, pg: pages(l), seen: new Set([i]) };
+  app.innerHTML = `<div class="rowb"><button class="back" onclick="home()">← Mapa</button><button class="mini" style="margin:0" onclick="play(${l})">⏭ Saltar a la práctica</button></div>
+  <span class="tag" style="margin-top:20px">Nivel ${l} · Teoría</span>
+  <h1 class="lt">${ICO[l - 1]} ${esc(L[0])}</h1>
+  <div class="dots" id="dots"></div>
+  <div class="book"><div id="pg" class="page"></div></div>
+  <div class="pn"><button class="go" id="pp" onclick="turn(-1)">← Anterior</button><button class="go" id="pnx" onclick="turn(1)">Siguiente →</button></div>
+  <div id="pgo"></div>`;
+  renderPage(1);
+}
+function renderPage(dir) {
+  const { l, i, pg } = TP, p = pg[i], el = $('#pg'), N = pg.filter(x => x.k == 'lec').length, last = i == pg.length - 1;
+  el.className = 'page';
+  void el.offsetWidth;
+  el.classList.add(dir > 0 ? 'turn-f' : 'turn-b');
+  if (p.k == 'scene') sceneInto(l, el);
+  else el.innerHTML = p.k == 'intro' ? introHTML(l) : p.k == 'lec' ? lecHTML(p.x, i, N) : cardsHTML(l);
+  $('#dots').innerHTML = pg.map((_, k) => `<button class="dot ${k == i ? 'on' : TP.seen.has(k) ? 'seen' : ''}" aria-label="Página ${k + 1} de ${pg.length}" onclick="turn(0,${k})"></button>`).join('');
+  $('#pp').disabled = i == 0;
+  $('#pnx').style.display = last ? 'none' : '';
+  $('#pgo').innerHTML = last ? `<button class="go big-go" onclick="play(${l})">¡A la práctica! 🚀</button>` : '';
+  if (last) { BE.state.read[l] = 1; BE.save(); checkBadges(); }
+}
+function turn(d, to) {
+  if (!TP) return;
+  const j = to == null ? TP.i + d : to;
+  if (j < 0 || j >= TP.pg.length || j == TP.i) return;
+  const dir = j > TP.i ? 1 : -1;
+  TP.i = j;
+  TP.seen.add(j);
+  renderPage(dir);
+  SFX.beep(dir > 0 ? 560 : 420, .05, 'triangle');
+  $('.book').scrollIntoView({ behavior: reduce ? 'auto' : 'smooth', block: 'start' });
+}
+
+/* =====================================================================
+   9. PANTALLA: GLOSARIO (tarjetas 3D con búsqueda y filtro)
+   ===================================================================== */
+function gloss() {
+  BE.state.flags.gloss = 1;
+  BE.save();
+  show(drawGloss, 1);
+  setTimeout(checkBadges, 800);
+}
+function drawGloss() {
+  TP = null;
+  if (S) S.on = false;
+  app.innerHTML = `<button class="back" onclick="home()">← Mapa</button>
+  <span class="tag" style="margin-top:20px">Biblioteca</span>
+  <h1 class="lt">📚 Glosario tico</h1>
+  <p class="mut">Tocá una tarjeta para voltearla. <b id="gn"></b></p>
+  <input id="gq" type="search" placeholder="Buscar término o definición…" value="${esc(GF.q)}" aria-label="Buscar en el glosario">
+  <div class="chips" id="gc"></div>
+  <div class="fgrid" id="gg"></div>`;
+  $('#gq').oninput = e => { GF.q = e.target.value; gridGloss(); };
+  chips();
+  gridGloss();
+}
+function chips() {
+  $('#gc').innerHTML = ['Todos', ...LV.map((_, i) => ICO[i] + ' ' + (i + 1))]
+    .map((t, i) => `<button class="chip ${GF.l == i ? 'on' : ''}" onclick="setL(${i})">${t}</button>`).join('');
+}
+function setL(i) { GF.l = i; chips(); gridGloss(); }
+function gridGloss() {
+  const q = norm(GF.q), L = GF.l;
+  const r = G.filter(g => (!L || g[0] == L) && (!q || norm(g[2] + ' ' + g[3]).includes(q)));
+  $('#gg').innerHTML = r.length ? r.map(fc).join('') : '<p class="mut">Nada por aquí… probá con otra palabra, mae.</p>';
+  $('#gn').textContent = r.length + ' de ' + G.length + ' términos';
+}
+
+/* =====================================================================
+   10. PANTALLA: PRÁCTICA (preguntas con pista y racha)
+   ===================================================================== */
+function play(l) { show(() => { S = BE.session(l); drawAsk(); }, 1); }
+function drawAsk() {
+  TP = null;
+  S.on = true;
+  S.lock = false;
+  S.nav = false;
+  const x = S.qs[S.i];
+  app.innerHTML = `<div class="bar">${S.qs.map((_, k) => `<i class="${k < S.i ? S.h[k] : k == S.i ? 'c' : ''}"></i>`).join('')}</div>
+  <div class="qh"><span class="tag">Nivel ${S.l} · Pregunta ${S.i + 1} de 7</span><span class="stk" id="stk">${S.st > 1 ? '🔥 racha ×' + S.st : ''}</span></div>
+  <h2 class="q">${esc(x.q)}</h2>
+  <div class="opts">${x.o.map((o, k) => `<button class="op" style="--i:${k}" onclick="pick(${k})">${esc(o)}</button>`).join('')}</div>
+  <div id="fb"><button class="mini" id="hb" onclick="hint()" ${S.hints ? '' : 'disabled'}>💡 Pista (${S.hints})</button></div>`;
+}
+function hint() {
+  if (!S || !S.hints || S.lock) return;
+  S.hints--;
+  const x = S.qs[S.i], bs = [...document.querySelectorAll('.opts .op')];
+  sh(bs.map((_, k) => k).filter(k => k != x.a)).slice(0, 2).forEach(k => { bs[k].disabled = true; bs[k].classList.add('gone'); });
+  const hb = $('#hb');
+  hb.disabled = true;
+  hb.textContent = '💡 Pista usada';
+  SFX.beep(740, .08, 'triangle');
+}
+function pick(k) {
+  if (!S || S.lock) return;
+  S.lock = true;
+  const x = S.qs[S.i], ok = k == x.a;
+  S.h[S.i] = ok ? 'd' : 'x';
+  S.ok += ok ? 1 : 0;
+  if (ok) {
+    S.st++;
+    S.top = Math.max(S.top, S.st);
+    if (S.top > BE.state.bestStreak) { BE.state.bestStreak = S.top; BE.save(); }
+    boom(S.st >= 3 ? 36 : 20);
+    SFX.ok();
+  } else {
+    S.st = 0;
+    S.rev.push({ q: x.q, mine: x.o[k], good: x.o[x.a] });
+    SFX.no();
+    try { navigator.vibrate && navigator.vibrate(60); } catch (e) {}
+  }
+  document.querySelectorAll('.opts .op').forEach((b, j) => {
+    b.disabled = true;
+    if (j == x.a) b.classList.add('ok'); else if (j == k) b.classList.add('bad');
+  });
+  const sk = $('#stk');
+  sk.textContent = S.st > 1 ? '🔥 racha ×' + S.st : '';
+  if (S.st > 1) { sk.classList.remove('bump'); void sk.offsetWidth; sk.classList.add('bump'); }
+  $('#fb').innerHTML = `<p class="fbm"><b>${ok ? '🎉 ' : '🙈 '}${rnd(ok ? YES : NO)}</b>${ok && S.st >= 3 ? ` <span class="hot">🔥 ¡racha de ${S.st}!</span>` : ''}</p>
+  <button class="go" onclick="next()">${S.i < 6 ? 'Siguiente →' : 'Ver resultado'}</button>`;
+  checkBadges();
+}
+function next() {
+  if (!S || S.nav) return;
+  S.nav = true;
+  if (S.i < 6) show(() => { S.i++; drawAsk(); }, 1);
+  else show(end, 1);
+}
+
+/* =====================================================================
+   11. PANTALLA: RESULTADO (anillo animado, estrellas y repaso)
+   ===================================================================== */
+function end() {
+  const l = S.l, n = S.ok, pass = n >= PASS;
+  S.on = false;
+  BE.record(l, n);
+  const stars = BE.stars(l);
+  app.innerHTML = `<span class="tag">Nivel ${l} · Resultado</span>
+  <div class="ringw"><svg class="ring" viewBox="0 0 120 120" aria-hidden="true"><circle class="rb" cx="60" cy="60" r="52"></circle><circle class="rf ${pass ? 'p' : 'f'}" id="rf" cx="60" cy="60" r="52" stroke-dasharray="327" stroke-dashoffset="327"></circle></svg>
+    <div class="rn"><span><span id="cnt">0</span>/7</span></div></div>
+  <div class="stars">${[1, 2, 3].map(k => `<span class="${k <= stars ? '' : 'off'}" style="--i:${k}">${k <= stars ? '★' : '☆'}</span>`).join('')}</div>
+  <p class="center"><b>${pass ? (l == 10 ? '🏆 ¡Terminaste! Sos un crack del QA. ¡Pura vida!' : '¡Tuanis! Nivel superado.') : 'Diay… ocupás al menos 5 de 7. Repasá la teoría y volvé.'}</b></p>
+  <p class="mut center">Puntos totales: ${BE.total()} · Mejor racha del nivel: ${S.top}</p>
+  ${S.rev.length ? `<div class="card"><span class="tag">Repasá estas (${S.rev.length})</span>${S.rev.map(r => `<div class="rv"><b>${esc(r.q)}</b><div class="mut">Tu respuesta: <s>${esc(r.mine)}</s></div><div>✅ ${esc(r.good)}</div></div>`).join('')}</div>` : '<p class="center">🏅 ¡Cero bichos! Ni una pregunta fallada.</p>'}
+  ${pass && l < 10 ? `<button class="go" onclick="theory(${l + 1})">Nivel ${l + 1} →</button>` : ''}
+  <button class="go" onclick="theory(${l})">Repasar teoría</button>
+  <button class="go" onclick="play(${l})">Reintentar</button>
+  <button class="go" onclick="home()">Mapa</button>`;
+  setTimeout(() => { const rf = $('#rf'); if (rf) rf.style.strokeDashoffset = 327 * (1 - n / 7); }, 250);
+  countUp($('#cnt'), n, 1100);
+  if (pass) { boom(40); SFX.win(); }
+  setPts();
+  checkBadges();
+}
+
+/* =====================================================================
+   12. INTERACCIONES GLOBALES: tilt 3D, parallax, teclado, gestos, tema
+   ===================================================================== */
+const tiltOK = !reduce && matchMedia('(hover: hover)').matches;
+document.addEventListener('pointermove', e => {
+  const r = document.documentElement;
+  r.style.setProperty('--mx', (e.clientX / innerWidth - .5).toFixed(3));
+  r.style.setProperty('--my', (e.clientY / innerHeight - .5).toFixed(3));
+  if (!tiltOK || !e.target.closest) return;
+  const t = e.target.closest('.tilt:not(:disabled)');
+  if (!t) return;
+  const b = t.getBoundingClientRect(), x = (e.clientX - b.left) / b.width - .5, y = (e.clientY - b.top) / b.height - .5, m = +t.dataset.t || 10;
+  t.style.setProperty('--ry', (x * m).toFixed(1) + 'deg');
+  t.style.setProperty('--rx', (-y * m).toFixed(1) + 'deg');
+}, { passive: true });
+document.addEventListener('pointerout', e => {
+  const t = e.target.closest && e.target.closest('.tilt');
+  if (t && !t.contains(e.relatedTarget)) { t.style.removeProperty('--rx'); t.style.removeProperty('--ry'); }
+});
+
+/* Tarjetas giratorias: clic o teclado */
+app.addEventListener('click', e => {
+  const c = e.target.closest('.fc');
+  if (!c) return;
+  c.classList.toggle('on');
+  SFX.beep(c.classList.contains('on') ? 700 : 500, .05, 'triangle');
+});
+app.addEventListener('keydown', e => {
+  if ((e.key == 'Enter' || e.key == ' ') && e.target.classList && e.target.classList.contains('fc')) {
+    e.preventDefault();
+    e.target.classList.toggle('on');
+  }
+});
+
+/* Teclado: flechas en la teoría; 1-4 y Enter en la práctica */
+document.addEventListener('keydown', e => {
+  if (e.target && e.target.tagName == 'INPUT') return;
+  if (TP && $('#pg')) {
+    if (e.key == 'ArrowRight') turn(1);
+    else if (e.key == 'ArrowLeft') turn(-1);
+  }
+  if (S && S.on) {
+    if (!S.lock && ['1', '2', '3', '4'].includes(e.key)) {
+      const b = document.querySelectorAll('.opts .op')[+e.key - 1];
+      if (b && !b.disabled) b.click();
+    } else if (S.lock && e.key == 'Enter') {
+      const g = $('#fb .go');
+      if (g) g.click();
+    }
+  }
+});
+
+/* Gesto de deslizar para pasar páginas en el celular */
+let sx = null;
+document.addEventListener('touchstart', e => {
+  sx = TP && e.target.closest('.book') && !e.target.closest('.tb, pre') ? e.touches[0].clientX : null;
+}, { passive: true });
+document.addEventListener('touchend', e => {
+  if (sx == null) return;
+  const dx = e.changedTouches[0].clientX - sx;
+  sx = null;
+  if (Math.abs(dx) > 70) turn(dx < 0 ? 1 : -1);
+}, { passive: true });
+
+/* Tema claro / oscuro y sonido */
+function applyTheme() {
+  const t = BE.state.theme, r = document.documentElement;
+  if (t) r.dataset.theme = t; else delete r.dataset.theme;
+}
+function toggleTheme() {
+  const st = BE.state, dark = st.theme ? st.theme == 'dark' : matchMedia('(prefers-color-scheme: dark)').matches;
+  st.theme = dark ? 'light' : 'dark';
+  BE.save();
+  applyTheme();
+}
+function syncTop() {
+  const b = $('#bSn');
+  b.textContent = BE.state.sound ? '🔊' : '🔇';
+  b.setAttribute('aria-pressed', String(!!BE.state.sound));
+}
+$('#bHome').onclick = () => home();
+$('#bGl').onclick = () => gloss();
+$('#bTh').onclick = toggleTheme;
+$('#bSn').onclick = () => { BE.state.sound = !BE.state.sound; BE.save(); syncTop(); SFX.ok(); };
+
+/* Emojis flotantes del fondo */
+['🦜', '🦥', '🐸', '☕', '🌋', '🌺', '🦋', '🌴', '🥑', '🇨🇷', '🌽'].forEach((e, k) => {
+  const i = document.createElement('i');
+  i.textContent = e;
+  i.style.cssText = `left:${(k * 9 + 4) % 96}%;animation-delay:${-k * 1.7}s;animation-duration:${12 + k % 4 * 3}s`;
+  $('.fl').appendChild(i);
+});
+
+/* =====================================================================
+   13. ARRANQUE
+   ===================================================================== */
+applyTheme();
+syncTop();
+setPts();
+drawHome();
+stagger();
+</script>
+</body>
+</html>
